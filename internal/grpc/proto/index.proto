@@ -14,6 +14,11 @@ message GetResponse {
     string data = 1;
 }
 
+// Keys 的返回结构体
+message KeysResponse {
+    repeated string data = 1;
+}
+
 // 获取数据的请求结构体
 message KeyRequest {
     string key = 1;
@@ -24,6 +29,17 @@ message SetRequest {
     string key = 1;
     string data = 2;
     int64 expire = 3;
+}
+
+// Expire 的请求结构体
+message ExpireRequest {
+    string key = 1;
+    int64 expire = 2;
+}
+
+// Persist 的请求结构体
+message PersistRequest {
+    string key = 1;
 }
 
 enum WatchType {
@@ -54,11 +70,13 @@ service CadbStoreHelper {
     // 删除数据
     rpc Delete(KeyRequest) returns (Empty);
     // 获取 keys 
-    rpc Keys(Empty) returns (GetResponse);
+    rpc Keys(Empty) returns (KeysResponse);
     // 设置key的过期时间
-    rpc Expire(KeyRequest) returns (Empty);
+    rpc Expire(ExpireRequest) returns (Empty);
     // 移除 key的过期时间
-    rpc Persist(KeyRequest) returns (Empty);
+    rpc Persist(PersistRequest) returns (Empty);
     // 监听 key的变化
-    rpc Watch(KeyRequest) returns (GetResponse);
+    rpc Watch(KeyRequest) returns (stream KeyChange);
+    // 关闭监听
+    rpc CloseWatch(KeyRequest) returns (Empty);
 }
