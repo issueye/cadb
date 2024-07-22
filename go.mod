@@ -6,7 +6,6 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/google/uuid v1.6.0
-	github.com/r3labs/sse/v2 v2.10.0
 	go.etcd.io/bbolt v1.3.10
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.1

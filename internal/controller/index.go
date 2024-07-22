@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/r3labs/sse/v2"
 	"golang.corp.yxkj.com/orange/cadb/internal/global"
 	"golang.corp.yxkj.com/orange/cadb/internal/store"
 )
@@ -126,51 +124,6 @@ func (wr *WatchResponse) ToData() []byte {
 		return []byte{}
 	}
 	return data
-}
-
-// Watch
-// 监听一个键的变化
-func Watch(c *gin.Context) {
-	key := c.DefaultQuery("stream", "")
-	clientID := c.GetHeader("secret-key")
-
-	keys := strings.Split(key, ":")
-	if len(keys) != 2 {
-		c.JSON(400, gin.H{"error": "invalid stream"})
-		return
-	}
-
-	valueKey := keys[1]
-	fmt.Println("clientID", clientID)
-
-	watcher := global.Store.CheckWatch(clientID, valueKey)
-	// fmt.Println("watcher", watcher.Id)
-	if watcher == nil {
-		watcher = global.Store.Watch(clientID, keys[1], func(WT store.WType, entry *store.KVEntry) {
-			wr := WatchResponse{
-				Key:   valueKey,
-				Type:  WT,
-				Value: entry.Value,
-			}
-
-			data := wr.ToData()
-			fmt.Println("publish ->", valueKey, string(data))
-			global.SSE.Publish(key, &sse.Event{Data: data})
-		})
-	}
-
-	go func() {
-		select {
-		case <-c.Request.Context().Done():
-			fmt.Println("Done -> client disconnect", clientID)
-			global.Store.RemoveWatch(clientID, key)
-		case <-c.Writer.CloseNotify():
-			fmt.Println("CloseNotify -> client disconnect", clientID)
-			global.Store.RemoveWatch(clientID, key)
-		}
-	}()
-
-	global.SSE.ServeHTTP(c.Writer, c.Request)
 }
 
 // NewClient

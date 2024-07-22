@@ -2,8 +2,6 @@ package client
 
 import (
 	"testing"
-
-	"github.com/r3labs/sse/v2"
 )
 
 func TestClient(t *testing.T) {
@@ -11,14 +9,6 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	client.WatchCallBak("test-sss", func(value []byte) {
-		t.Log("watched value:", string(value))
-	})
-
-	client.WatchCallBak("test-sss---", func(value []byte) {
-		t.Log("watched value---:", string(value))
-	})
 
 	err = client.Set("test-sss", "aasdafsad")
 	if err != nil {
@@ -70,22 +60,9 @@ func TestClient2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	client.WatchCallBak("test-sss", func(value []byte) {
-		t.Log("watched value:", string(value))
-	})
-
 	err = client.Set("test-sss", "------2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client.SSEClient.OnDisconnect(func(c *sse.Client) {
-		t.Log("disconnected")
-	})
-
-	// delete
-	// err = client.Delete("test-sss")
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
 }

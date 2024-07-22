@@ -26,7 +26,6 @@ func Server() *gin.Engine {
 			store.GET("/keys", controller.Keys)
 			store.PUT("/expire/:key/:ttl", controller.SetTTL)
 			store.DELETE("/expire/:key", controller.RemoveTTL)
-			store.GET("watch", controller.Watch)
 		}
 
 		client := v1.Group("/client")

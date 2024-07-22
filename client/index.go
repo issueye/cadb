@@ -4,14 +4,12 @@ import (
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/r3labs/sse/v2"
 )
 
 type Client struct {
 	SecretKey   string
 	restyClient *resty.Client
 	baseUrl     string
-	SSEClient   *sse.Client
 }
 
 type RespData struct {
@@ -96,21 +94,4 @@ func (c *Client) GetKeys() (keys []string, err error) {
 	}
 
 	return nil, nil
-}
-
-// Watch
-func (c *Client) WatchCallBak(key string, fn func(value []byte)) {
-	url := fmt.Sprintf("%s/api/v1/store/watch", c.baseUrl)
-
-	client := sse.NewClient(url, func(sseC *sse.Client) {
-		sseC.Headers["secret-key"] = c.SecretKey
-	})
-
-	c.SSEClient = client
-
-	go func() {
-		c.SSEClient.Subscribe(c.SecretKey+":"+key, func(msg *sse.Event) {
-			fn(msg.Data)
-		})
-	}()
 }
