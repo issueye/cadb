@@ -1,6 +1,10 @@
 package store
 
-import "github.com/google/uuid"
+import (
+	"net"
+
+	"github.com/gin-gonic/gin"
+)
 
 type WType int
 
@@ -24,6 +28,8 @@ type WatchCallback func(WT WType, entry *KVEntry)
 type Watcher struct {
 	Id       string        // 观察者ID
 	CallBack WatchCallback // 回调函数
+	Ctx      *gin.Context  // 上下文
+	Conn     net.Conn
 }
 
 // IsWatch
@@ -32,28 +38,44 @@ func (s *KVStore) HaveWatch(key string) bool {
 	s.watchedKeysLock.Lock()
 	defer s.watchedKeysLock.Unlock()
 
+	// fmt.Println("watchedKeys", s.watchedKeys)
 	_, ok := s.watchedKeys[key]
 	return ok
 }
 
 // Watch
 // 监听指定 key 的变化,并在有变化时通知订阅者
-func (s *KVStore) Watch(key string, cb WatchCallback) (id string, err error) {
+func (s *KVStore) Watch(id string, key string, cb WatchCallback) *Watcher {
 	s.watchedKeysLock.Lock()
 	defer s.watchedKeysLock.Unlock()
 
 	// 将 key 和对应的 channel 添加到 watchedKeys 中
-	watcher := &Watcher{Id: uuid.New().String(), CallBack: cb}
+	watcher := &Watcher{Id: id, CallBack: cb}
 	s.watchedKeys[key] = append(s.watchedKeys[key], watcher)
-	return watcher.Id, nil
+
+	return watcher
 }
 
-// MoveWatch
-// 取消监听指定 key 的变化
-// 如果没有订阅者了,则将 key 从 watchedKeys 中移除
-func (s *KVStore) MoveWatch(key string, id string) {
+func (s *KVStore) CheckWatch(id string, key string) *Watcher {
 	s.watchedKeysLock.Lock()
 	defer s.watchedKeysLock.Unlock()
+
+	for _, w := range s.watchedKeys[key] {
+		if w.Id == id {
+			return w
+		}
+	}
+	return nil
+}
+
+// RemoveWatch
+// 取消监听指定 key 的变化
+// 如果没有订阅者了,则将 key 从 watchedKeys 中移除
+func (s *KVStore) RemoveWatch(key string, id string) {
+	s.watchedKeysLock.Lock()
+	defer s.watchedKeysLock.Unlock()
+
+	// fmt.Println("RemoveWatch key: ", key)
 
 	// 将 key 和对应的 channel 从 watchedKeys 中移除
 	for i, w := range s.watchedKeys[key] {
@@ -76,6 +98,7 @@ func (s *KVStore) Notify(data *Notify) {
 	defer s.watchedKeysLock.Unlock()
 
 	// 通知所有订阅了该 key 的订阅者
+	// fmt.Println("Notify key: ", data.Key)
 	for _, w := range s.watchedKeys[data.Key] {
 		go w.CallBack(data.WT, data.Entry)
 	}

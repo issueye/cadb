@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 	"sort"
@@ -62,9 +63,13 @@ func (ei *ExpireIndex) getExpiredKeys(now int64) ([]string, error) {
 // expireAt 过期时间戳
 func (ei *ExpireIndex) Add(key string, expireAt int64) {
 	ei.lock.Lock()
-	defer ei.lock.Unlock()
-	// 将键添加到过期索引中
-	ei.expireList = append(ei.expireList, Expire{ExpireAt: expireAt, Key: key})
+
+	func() {
+		defer ei.lock.Unlock()
+		// 将键添加到过期索引中
+		ei.expireList = append(ei.expireList, Expire{ExpireAt: expireAt, Key: key})
+	}()
+
 	// 对过期索引进行排序
 	ei.Sort()
 }
@@ -107,18 +112,18 @@ func (s *KVStore) startExpireLoop() {
 
 				// 检查 key 是否被 Watch，如果被 Watch，则通知
 				for _, key := range keys {
-					if s.HaveWatch(key) {
+					fmt.Println("expire loop key", key)
+					have := s.HaveWatch(key)
+					if have {
 						// 获取数据
-						data, err := s.Get(key)
-						if err == nil {
-							// 通知 Watch
-							s.Notify(&Notify{
-								WT:    WT_Expire,
-								Key:   key,
-								Entry: data,
-							})
-						}
+						s.Notify(&Notify{
+							WT:    WT_Expire,
+							Key:   key,
+							Entry: &KVEntry{},
+						})
 					}
+
+					s.expireIndex.Remove(key)
 				}
 
 				// 批量删除过期数据

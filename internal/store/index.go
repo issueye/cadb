@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
@@ -10,22 +11,18 @@ import (
 	"golang.corp.yxkj.com/orange/cadb/internal/utils"
 )
 
-var DefaultBucket = "kvstore"
-var keysBucket = "keys"
+var DefaultBucket = []byte("kvstore")
+var keysBucket = []byte("keys")
 
 type KVEntry struct {
-	Value string
-	// 过期时间
-	TTL int64
-	// TTL 类型 0 表示秒，1 表示毫秒
-	ttlType int
-	// key 的各个层级
-	Keys []string
+	Value string `json:"value"` // key 的值
+	TTL   int64  `json:"ttl"`   // 过期时间
+	Key   string `json:"key"`   // key
 }
 
 type KVStore struct {
 	// bolt 数据库
-	db *bbolt.DB
+	db *DB[KVEntry]
 	// 过期索引
 	expireIndex *ExpireIndex
 	// TTL 类型 0 表示秒，1 表示毫秒
@@ -38,13 +35,16 @@ type KVStore struct {
 	watchedKeys map[string][]*Watcher
 	// 被观察的key 锁
 	watchedKeysLock *sync.Mutex
+	// client
+	Client *ClientStoreImpl
 }
 
 func NewKVStore(dbPath string) (*KVStore, error) {
-	db, err := bbolt.Open(dbPath, 0600, nil)
+	db, err := NewDB[KVEntry](dbPath)
 	if err != nil {
 		return nil, err
 	}
+
 	kv := &KVStore{
 		db:              db,
 		expireIndex:     NewExpireIndex(),
@@ -52,12 +52,24 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 		watchedKeysLock: &sync.Mutex{},
 	}
 
+	// 可能会 panic
+	client, err := NewClientStoreImpl()
+	if err != nil {
+		return nil, err
+	}
+
+	kv.Client = client
+
 	// 创建 keysBucket defaultBucket
-	err = kv.db.Update(func(tx *bbolt.Tx) error {
-		tx.CreateBucketIfNotExists([]byte(keysBucket))
-		tx.CreateBucketIfNotExists([]byte(DefaultBucket))
-		return nil
-	})
+	err = db.CreateBucket(keysBucket)
+	if err != nil {
+		return nil, fmt.Errorf("create bucket %s failed: %w", keysBucket, err)
+	}
+
+	err = db.CreateBucket(DefaultBucket)
+	if err != nil {
+		return nil, fmt.Errorf("create bucket %s failed: %w", DefaultBucket, err)
+	}
 
 	kv.startExpireLoop()
 
@@ -65,31 +77,37 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 }
 
 type CaKey struct {
-	Key    string
-	Bucket string
+	Key    []byte
+	Bucket []byte
 }
 
 func (s *KVStore) ParseKey(key string) (caKey *CaKey) {
-	keys := strings.Split(key, "/")
+	keys := strings.Split(key, "-")
 	if len(keys) == 1 {
 		caKey = &CaKey{
-			Key:    keys[0],
+			Key:    []byte(keys[0]),
 			Bucket: DefaultBucket,
 		}
 	} else {
-		caKey = &CaKey{Key: strings.Join(keys[1:], "/"), Bucket: keys[0]}
+		caKey = &CaKey{Key: []byte(strings.Join(keys[1:], "-")), Bucket: []byte(keys[0])}
 	}
 
 	// 如果key 不是 DefaultBucket 需要判断 Bucket 是否存在，如果不存在则创建
-	if caKey.Bucket != DefaultBucket {
-
-		s.db.Update(func(tx *bbolt.Tx) error {
-			tx.CreateBucketIfNotExists([]byte(caKey.Bucket))
-			return nil
-		})
+	if bytes.Equal(DefaultBucket, caKey.Bucket) {
+		s.db.CreateBucket(caKey.Bucket)
 	}
 
 	return
+}
+
+func (s *KVStore) CheckClientId(clientId string) bool {
+	ok, err := s.Client.CheckClientIdExists(clientId)
+	return ok && err == nil
+}
+
+func (s *KVStore) ChekClientSecretKey(secretKey string) bool {
+	ok, err := s.Client.ChekClientSecretKeyExists(secretKey)
+	return ok && err == nil
 }
 
 // Set 设置指定 key 的值
@@ -97,6 +115,8 @@ func (s *KVStore) Set(key, value string, ttl int) error {
 	caKey := s.ParseKey(key)
 
 	entry := &KVEntry{
+		Key:   key,
+		TTL:   int64(ttl),
 		Value: value,
 	}
 
@@ -112,16 +132,13 @@ func (s *KVStore) Set(key, value string, ttl int) error {
 	}
 
 	// 将数据写入 BoltDB
-	err := s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(caKey.Bucket))
-		return b.Put([]byte(caKey.Key), utils.MustMarshal(entry))
-	})
+	err := s.db.Put(caKey.Bucket, caKey.Key, entry)
 	if err != nil {
 		return err
 	}
 
 	// 存储一份 key 到 keysBucket 中
-	err = s.db.Update(func(tx *bbolt.Tx) error { return tx.Bucket([]byte(keysBucket)).Put([]byte(key), []byte{}) })
+	err = s.db.db.Update(func(tx *bbolt.Tx) error { return tx.Bucket([]byte(keysBucket)).Put([]byte(key), []byte{}) })
 
 	// 通知所有订阅了该 key 的订阅者
 	s.Notify(&Notify{
@@ -133,30 +150,19 @@ func (s *KVStore) Set(key, value string, ttl int) error {
 	return nil
 }
 
-func (s *KVStore) Get(key string) (*KVEntry, error) {
+func (s *KVStore) Get(key string) (entry *KVEntry, err error) {
 	caKey := s.ParseKey(key)
 
-	var entry *KVEntry
-	err := s.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(caKey.Bucket))
+	entry, err = s.db.Get(caKey.Bucket, caKey.Key)
+	if err != nil {
+		return nil, err
+	}
 
-		// 获取数据
-		data := b.Get([]byte(caKey.Key))
-		if data == nil {
-			return nil
-		}
+	// 检查数据是否过期
+	if entry.TTL > 0 && time.Now().Unix() >= entry.TTL {
+		return nil, fmt.Errorf("key %s has expired", key)
+	}
 
-		// 反序列化
-		if err := utils.UnMarshal(data, &entry); err != nil {
-			return err
-		}
-
-		// 检查是否过期
-		if entry.TTL > 0 && time.Now().Unix() >= entry.TTL {
-			return fmt.Errorf("key %s has expired", key)
-		}
-		return nil
-	})
 	return entry, err
 }
 
@@ -165,37 +171,22 @@ func (s *KVStore) Get(key string) (*KVEntry, error) {
 func (s *KVStore) Delete(key string) error {
 	caKey := s.ParseKey(key)
 
-	return s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(caKey.Bucket))
-		// 获取数据
-		data := b.Get([]byte(caKey.Key))
-		if data == nil {
-			return nil
-		}
+	entry, err := s.db.DeleteR(caKey.Bucket, caKey.Key)
+	if err != nil {
+		return err
+	}
 
-		// 反序列化
-		var entry *KVEntry
-		if err := utils.UnMarshal(data, &entry); err != nil {
-			return err
-		}
+	// 如果数据被 Watch，则通知所有订阅者
+	if s.HaveWatch(key) {
+		s.Notify(&Notify{
+			WT:    WT_Del,
+			Key:   key,
+			Entry: entry,
+		})
+	}
 
-		// 如果数据被 Watch，则通知所有订阅者
-		if s.HaveWatch(key) {
-			s.Notify(&Notify{
-				WT:    WT_Del,
-				Key:   key,
-				Entry: entry,
-			})
-		}
-
-		// 移除 keysBucket 中的 key
-		err := s.db.Update(func(tx *bbolt.Tx) error { return tx.Bucket([]byte(keysBucket)).Delete([]byte(key)) })
-		if err != nil {
-			return err
-		}
-
-		return b.Delete([]byte(caKey.Key))
-	})
+	// 移除 keysBucket 中的 key
+	return s.db.Delete([]byte(keysBucket), []byte(key))
 }
 
 // RemoveTTL
@@ -204,22 +195,9 @@ func (s *KVStore) Delete(key string) error {
 func (s *KVStore) RemoveTTL(key string) (err error) {
 	caKey := s.ParseKey(key)
 
-	err = s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(caKey.Bucket))
-		// 获取数据
-		data := b.Get([]byte(caKey.Key))
-		if data == nil {
-			return nil
-		}
-
-		// 反序列化
-		var entry *KVEntry
-		if err := utils.UnMarshal(data, &entry); err != nil {
-			return err
-		}
-
+	s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
 		// 如果数据已经过期
-		if entry.TTL > 0 && time.Now().Unix() >= entry.TTL {
+		if v.TTL > 0 && time.Now().Unix() >= v.TTL {
 			return fmt.Errorf("key %s has expired", key)
 		}
 
@@ -228,17 +206,17 @@ func (s *KVStore) RemoveTTL(key string) (err error) {
 			s.Notify(&Notify{
 				WT:    WT_ModifyExpire,
 				Key:   key,
-				Entry: entry,
+				Entry: v,
 			})
 		}
 
 		// 移除过期缓存中的数据
 		s.expireIndex.Remove(key)
-		entry.TTL = 0
+		v.TTL = 0
 
 		// 序列化
-		data = utils.MustMarshal(entry)
-		return b.Put([]byte(caKey.Key), data)
+		data := utils.MustMarshal(v)
+		return bkt.Put(caKey.Key, data)
 	})
 
 	return
@@ -248,24 +226,16 @@ func (s *KVStore) RemoveTTL(key string) (err error) {
 // 设置指定 key 的 TTL
 func (s *KVStore) SetTTL(key string, ttl int64) (entry *KVEntry, err error) {
 	caKey := s.ParseKey(key)
-	err = s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(caKey.Bucket))
-		// 获取数据
-		data := b.Get([]byte(caKey.Key))
-		if data == nil {
-			return nil
-		}
 
-		// 反序列化
-		if err := utils.UnMarshal(data, &entry); err != nil {
-			return err
-		}
+	err = s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
 		// 设置 TTL
 		entry.TTL = time.Now().Unix() + ttl
 		s.expireIndex.Add(key, entry.TTL)
-		return nil
-	})
 
+		// 序列化
+		data := utils.MustMarshal(v)
+		return bkt.Put(caKey.Key, data)
+	})
 	return
 }
 
@@ -273,10 +243,11 @@ func (s *KVStore) SetTTL(key string, ttl int64) (entry *KVEntry, err error) {
 // 获取所有 key
 func (s *KVStore) Keys() (keys []string, err error) {
 	err = s.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(keysBucket))
+		b := tx.Bucket(keysBucket)
 		if b == nil {
 			return nil
 		}
+
 		return b.ForEach(func(k, v []byte) error {
 			keys = append(keys, string(k))
 			return nil

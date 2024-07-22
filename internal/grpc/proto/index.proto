@@ -1,0 +1,64 @@
+syntax = "proto3";
+package proto;
+option go_package = "./proto";
+
+// 空数据
+message Empty {}
+
+message ClientResponse {
+    string secretKey = 2;
+}
+
+// 获取数据的返回结构体
+message GetResponse {
+    string data = 1;
+}
+
+// 获取数据的请求结构体
+message KeyRequest {
+    string key = 1;
+}
+
+// 设置数据的请求结构体
+message SetRequest {
+    string key = 1;
+    string data = 2;
+    int64 expire = 3;
+}
+
+enum WatchType {
+    WATCH_TYPE_ADD = 0;
+    WATCH_TYPE_UPDATE = 1;
+    WATCH_TYPE_DELETE = 2;
+    WATCH_TYPE_EXPIRE = 3;
+    WATCH_TYPE_PERSIST = 4;
+}
+
+// Key 的变化返回结构体
+message KeyChange {
+    string key = 1;
+    string data = 2;
+    WatchType type = 3;
+}
+
+// 数据库操作接口
+service CadbStoreHelper {
+    // 新建客户端
+    rpc NewClient(Empty) returns (ClientResponse);
+    // 关闭客户端
+    rpc CloseClient(Empty) returns(Empty);
+    // 获取数据
+    rpc Get(KeyRequest) returns (GetResponse);
+    // 设置数据
+    rpc Set(SetRequest) returns (Empty);
+    // 删除数据
+    rpc Delete(KeyRequest) returns (Empty);
+    // 获取 keys 
+    rpc Keys(Empty) returns (GetResponse);
+    // 设置key的过期时间
+    rpc Expire(KeyRequest) returns (Empty);
+    // 移除 key的过期时间
+    rpc Persist(KeyRequest) returns (Empty);
+    // 监听 key的变化
+    rpc Watch(KeyRequest) returns (GetResponse);
+}
