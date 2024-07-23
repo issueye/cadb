@@ -64,15 +64,15 @@ func (db *DB[T]) ViewFunc(key, bucket []byte, fn func(bkt *bbolt.Bucket, v *T) e
 // Get
 // 获取数据
 func (db *DB[T]) Get(bucket, key []byte) (data *T, err error) {
-	var v []byte
+	data = new(T)
 	err = db.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
 		if b == nil {
 			return nil
 		}
-		v = b.Get(key)
 
-		return utils.UnMarshal(v, &data)
+		v := b.Get(key)
+		return utils.UnMarshal(v, data)
 	})
 	return
 }

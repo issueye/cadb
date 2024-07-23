@@ -1,10 +1,13 @@
 {
     "cSpell.words": [
+        "bbolt",
         "Cadb",
+        "lockdb",
         "protobuf",
         "protoc",
         "protoimpl",
         "protoreflect",
-        "resty"
+        "resty",
+        "yxkj"
     ]
 }

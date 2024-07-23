@@ -23,12 +23,8 @@ func (srv *Server) Get(ctx context.Context, req *proto.KeyRequest) (*proto.GetRe
 
 // 设置数据
 func (srv *Server) Set(ctx context.Context, req *proto.SetRequest) (*proto.Empty, error) {
-	err := global.Store.Set(req.Key, req.Data, int(req.Expire))
-	if err != nil {
-		return nil, err
-	}
-
-	return &proto.Empty{}, nil
+	err := global.Store.Set(req.Key, req.Data, req.Expire)
+	return &proto.Empty{}, err
 }
 
 // 删除数据

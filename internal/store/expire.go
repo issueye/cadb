@@ -15,10 +15,8 @@ type Expire struct {
 }
 
 type ExpireIndex struct {
-	// 根据过期时间进行排序的有序列表
-	expireList []Expire
-	// 读写锁
-	lock *sync.RWMutex
+	expireList []Expire      // 根据过期时间进行排序的有序列表
+	lock       *sync.RWMutex // 读写锁
 }
 
 // NewExpireIndex
@@ -46,13 +44,14 @@ func (ei *ExpireIndex) getExpiredKeys(now int64) ([]*ExpireLoop, error) {
 	// 因为数据已经根据过期时间排序，所以只需要遍历过期时间小于等于当前时间的元素即可
 	keys := make([]*ExpireLoop, 0)
 	for _, expire := range ei.expireList {
-		keys = append(keys, &ExpireLoop{Key: expire.Key, IsLock: expire.IsLock})
-
 		// 当前的元素未过期，后续的元素也不会过期，直接退出循环
 		if expire.ExpireAt > now {
 			break
 		}
+
+		keys = append(keys, &ExpireLoop{Key: expire.Key, IsLock: expire.IsLock})
 	}
+
 	return keys, nil
 }
 
@@ -131,14 +130,13 @@ func (s *KVStore) startExpireLoop() {
 				s.batchDelete(keys)
 
 				// 短暂休眠,减轻系统负载
-				time.Sleep(time.Second / 2)
+				time.Sleep(time.Second)
 			}
 		}()
 	}
 }
 
 func (s *KVStore) batchDelete(keys []*ExpireLoop) {
-
 	for _, key := range keys {
 		if key.IsLock {
 			CaKey := s.ParseKey(key.Key, true)
@@ -149,6 +147,7 @@ func (s *KVStore) batchDelete(keys []*ExpireLoop) {
 			}
 		} else {
 			CaKey := s.ParseKey(key.Key, false)
+			// fmt.Printf("delete -> bucket: %s, key: %s", CaKey.Bucket, CaKey.Key)
 			err := s.db.Delete(CaKey.Bucket, CaKey.Key)
 			if err != nil {
 				log.Printf("Error deleting key: %v", err)

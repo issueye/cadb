@@ -76,8 +76,8 @@ func (s *ClientStoreImpl) CheckClientIdExists(id string) (bool, error) {
 	return data != nil, err
 }
 
-// ChekClientScecretKeyExists(secretKey string) (bool, error)
-func (s *ClientStoreImpl) ChekClientSecretKeyExists(secretKey string) (bool, error) {
+// CheckClientSecretKeyExists(secretKey string) (bool, error)
+func (s *ClientStoreImpl) CheckClientSecretKeyExists(secretKey string) (bool, error) {
 	data, err := s.GetClientBySecretKey(secretKey)
 	return data != nil, err
 }
