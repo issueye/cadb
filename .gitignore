@@ -1,3 +1,4 @@
 tmp
 runtime
 vendor
+*.exe
