@@ -13,6 +13,9 @@ import (
 const (
 	AuthKey         = "secret-key"
 	NewClientMethod = "/proto.CadbClientHelper/NewClient"
+	Ping            = "/proto.CommonHelper/Ping"
+	Version         = "/proto.CommonHelper/Version"
+	Heartbeat       = "/proto.CommonHelper/Heartbeat"
 )
 
 func AuthMiddleware(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -56,6 +59,9 @@ func isPublicMethod(methodName string) bool {
 	// 在这里定义不需要鉴权的方法列表
 	publicMethods := []string{
 		NewClientMethod,
+		Ping,
+		Version,
+		Heartbeat,
 	}
 
 	for _, m := range publicMethods {

@@ -4,16 +4,14 @@ import (
 	"log"
 	"runtime"
 	"sort"
-	"strings"
 	"sync"
 	"time"
-
-	"go.etcd.io/bbolt"
 )
 
 type Expire struct {
 	ExpireAt int64  // 过期时间戳
 	Key      string // 数据的键
+	IsLock   bool   // 是否是锁
 }
 
 type ExpireIndex struct {
@@ -31,22 +29,24 @@ func NewExpireIndex() *ExpireIndex {
 	}
 }
 
+type ExpireLoop struct {
+	Key    string
+	IsLock bool
+}
+
 // getExpiredKeys
 // 获取所有即将过期的键
 // 参数：now 当前时间戳
 // 返回值：即将过期的键列表
 // 错误：如果发生错误，则返回错误信息
-func (ei *ExpireIndex) getExpiredKeys(now int64) ([]string, error) {
+func (ei *ExpireIndex) getExpiredKeys(now int64) ([]*ExpireLoop, error) {
 	ei.lock.RLock()
 	defer ei.lock.RUnlock()
 
 	// 因为数据已经根据过期时间排序，所以只需要遍历过期时间小于等于当前时间的元素即可
-	keys := make([]string, 0)
+	keys := make([]*ExpireLoop, 0)
 	for _, expire := range ei.expireList {
-		// 如果当前的元素已经过期，则将其添加到结果列表中
-		if expire.ExpireAt <= now {
-			keys = append(keys, expire.Key)
-		}
+		keys = append(keys, &ExpireLoop{Key: expire.Key, IsLock: expire.IsLock})
 
 		// 当前的元素未过期，后续的元素也不会过期，直接退出循环
 		if expire.ExpireAt > now {
@@ -111,43 +111,50 @@ func (s *KVStore) startExpireLoop() {
 
 				// 检查 key 是否被 Watch，如果被 Watch，则通知
 				for _, key := range keys {
-					have := s.HaveWatch(key)
+
+					have := s.HaveWatch(key.Key)
 					if have {
 						// 获取数据
 						s.Notify(&Notify{
 							WT:  WT_EXPIRE,
-							Key: key,
+							Key: key.Key,
 							Entry: &KVEntry{
-								Key: key,
+								Key: key.Key,
 							},
 						})
 					}
 
-					s.expireIndex.Remove(key)
+					s.expireIndex.Remove(key.Key)
 				}
 
 				// 批量删除过期数据
 				s.batchDelete(keys)
 
 				// 短暂休眠,减轻系统负载
-				time.Sleep(time.Second)
+				time.Sleep(time.Second / 2)
 			}
 		}()
 	}
 }
 
-func (s *KVStore) batchDelete(keys []string) {
-	s.db.Update(func(tx *bbolt.Tx) error {
-		for _, key := range keys {
-			parts := strings.Split(key, "/")
-			b := tx.Bucket([]byte(parts[0]))
-			if b != nil {
-				b.Delete([]byte(strings.Join(parts[1:], "/")))
+func (s *KVStore) batchDelete(keys []*ExpireLoop) {
 
-				keysBucket := tx.Bucket([]byte(keysBucket))
-				keysBucket.Delete([]byte(key))
+	for _, key := range keys {
+		if key.IsLock {
+			CaKey := s.ParseKey(key.Key, true)
+			err := s.lockdb.Delete(CaKey.Bucket, CaKey.Key)
+			if err != nil {
+				log.Printf("Error deleting lock: %v", err)
+				continue
 			}
+		} else {
+			CaKey := s.ParseKey(key.Key, false)
+			err := s.db.Delete(CaKey.Bucket, CaKey.Key)
+			if err != nil {
+				log.Printf("Error deleting key: %v", err)
+				continue
+			}
+			s.db.Delete(keysBucket, CaKey.Key)
 		}
-		return nil
-	})
+	}
 }

@@ -50,8 +50,10 @@ func NewServer() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	proto.RegisterCommonHelperServer(grpcSrv, &controller.CommonHelper{})
 	proto.RegisterCadbStoreHelperServer(grpcSrv, &controller.Server{})
 	proto.RegisterCadbClientHelperServer(grpcSrv, &controller.Server{})
+	proto.RegisterCadbLockHelperServer(grpcSrv, &controller.CadbLock{})
 	reflection.Register(grpcSrv)
 
 	ShowBaner()

@@ -27,11 +27,11 @@ const (
 type WatchType int32
 
 const (
-	WatchType_WATCH_TYPE_PUT         WatchType = 0
-	WatchType_WATCH_TYPE_DELETE      WatchType = 1
-	WatchType_WATCH_TYPE_EXPIRE      WatchType = 2
-	WatchType_WATCH_TYPE_MOVE_EXPIRE WatchType = 3
-	WatchType_WATCH_TYPE_ADD_EXPIRE  WatchType = 4
+	WatchType_WATCH_TYPE_PUT         WatchType = 0 // 设置数据
+	WatchType_WATCH_TYPE_DELETE      WatchType = 1 // 删除数据
+	WatchType_WATCH_TYPE_EXPIRE      WatchType = 2 // 设置过期时间
+	WatchType_WATCH_TYPE_MOVE_EXPIRE WatchType = 3 // 移除过期时间
+	WatchType_WATCH_TYPE_ADD_EXPIRE  WatchType = 4 // 添加过期时间
 )
 
 // Enum value maps for WatchType.
@@ -118,18 +118,242 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_index_proto_rawDescGZIP(), []int{0}
 }
 
+// 返回
+type PingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Message   string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`      // 返回消息  返回 pong
+	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // 时间戳 返回当前服务的时间戳
+}
+
+func (x *PingResponse) Reset() {
+	*x = PingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PingResponse) ProtoMessage() {}
+
+func (x *PingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PingResponse.ProtoReflect.Descriptor instead.
+func (*PingResponse) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *PingResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *PingResponse) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+// 返回
+type VersionResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Version   string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`     // 版本号
+	AppName   string `protobuf:"bytes,2,opt,name=appName,proto3" json:"appName,omitempty"`     // 程序名称
+	GitHash   string `protobuf:"bytes,3,opt,name=gitHash,proto3" json:"gitHash,omitempty"`     // git hash
+	GitBranch string `protobuf:"bytes,4,opt,name=gitBranch,proto3" json:"gitBranch,omitempty"` // git 分支
+	BuildTime string `protobuf:"bytes,5,opt,name=buildTime,proto3" json:"buildTime,omitempty"` // 构建时间
+	Goos      string `protobuf:"bytes,6,opt,name=goos,proto3" json:"goos,omitempty"`           // 操作系统
+	GoVersion string `protobuf:"bytes,7,opt,name=goVersion,proto3" json:"goVersion,omitempty"` // go 版本
+}
+
+func (x *VersionResponse) Reset() {
+	*x = VersionResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *VersionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VersionResponse) ProtoMessage() {}
+
+func (x *VersionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VersionResponse.ProtoReflect.Descriptor instead.
+func (*VersionResponse) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *VersionResponse) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetAppName() string {
+	if x != nil {
+		return x.AppName
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetGitHash() string {
+	if x != nil {
+		return x.GitHash
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetGitBranch() string {
+	if x != nil {
+		return x.GitBranch
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetBuildTime() string {
+	if x != nil {
+		return x.BuildTime
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetGoos() string {
+	if x != nil {
+		return x.Goos
+	}
+	return ""
+}
+
+func (x *VersionResponse) GetGoVersion() string {
+	if x != nil {
+		return x.GoVersion
+	}
+	return ""
+}
+
+// 心跳
+type HeartbeatResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Message     string  `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`           // 返回消息
+	Timestamp   int64   `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`      // 时间戳
+	MemoryUsage float32 `protobuf:"fixed32,3,opt,name=memoryUsage,proto3" json:"memoryUsage,omitempty"` // 内存使用情况
+	CpuUsage    float32 `protobuf:"fixed32,4,opt,name=cpuUsage,proto3" json:"cpuUsage,omitempty"`       // CPU使用情况
+}
+
+func (x *HeartbeatResponse) Reset() {
+	*x = HeartbeatResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *HeartbeatResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeartbeatResponse) ProtoMessage() {}
+
+func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeartbeatResponse.ProtoReflect.Descriptor instead.
+func (*HeartbeatResponse) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *HeartbeatResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *HeartbeatResponse) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *HeartbeatResponse) GetMemoryUsage() float32 {
+	if x != nil {
+		return x.MemoryUsage
+	}
+	return 0
+}
+
+func (x *HeartbeatResponse) GetCpuUsage() float32 {
+	if x != nil {
+		return x.CpuUsage
+	}
+	return 0
+}
+
 type ClientResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SecretKey string `protobuf:"bytes,2,opt,name=secretKey,proto3" json:"secretKey,omitempty"`
+	SecretKey string `protobuf:"bytes,2,opt,name=secretKey,proto3" json:"secretKey,omitempty"` // 秘钥
 }
 
 func (x *ClientResponse) Reset() {
 	*x = ClientResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[1]
+		mi := &file_index_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -142,7 +366,7 @@ func (x *ClientResponse) String() string {
 func (*ClientResponse) ProtoMessage() {}
 
 func (x *ClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[1]
+	mi := &file_index_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -155,7 +379,7 @@ func (x *ClientResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientResponse.ProtoReflect.Descriptor instead.
 func (*ClientResponse) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{1}
+	return file_index_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ClientResponse) GetSecretKey() string {
@@ -177,7 +401,7 @@ type GetResponse struct {
 func (x *GetResponse) Reset() {
 	*x = GetResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[2]
+		mi := &file_index_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -190,7 +414,7 @@ func (x *GetResponse) String() string {
 func (*GetResponse) ProtoMessage() {}
 
 func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[2]
+	mi := &file_index_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -203,7 +427,7 @@ func (x *GetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
 func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{2}
+	return file_index_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetResponse) GetData() string {
@@ -225,7 +449,7 @@ type KeysResponse struct {
 func (x *KeysResponse) Reset() {
 	*x = KeysResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[3]
+		mi := &file_index_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -238,7 +462,7 @@ func (x *KeysResponse) String() string {
 func (*KeysResponse) ProtoMessage() {}
 
 func (x *KeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[3]
+	mi := &file_index_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,7 +475,7 @@ func (x *KeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeysResponse.ProtoReflect.Descriptor instead.
 func (*KeysResponse) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{3}
+	return file_index_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *KeysResponse) GetData() []string {
@@ -273,7 +497,7 @@ type KeyRequest struct {
 func (x *KeyRequest) Reset() {
 	*x = KeyRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[4]
+		mi := &file_index_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -286,7 +510,7 @@ func (x *KeyRequest) String() string {
 func (*KeyRequest) ProtoMessage() {}
 
 func (x *KeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[4]
+	mi := &file_index_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -299,7 +523,7 @@ func (x *KeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyRequest.ProtoReflect.Descriptor instead.
 func (*KeyRequest) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{4}
+	return file_index_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *KeyRequest) GetKey() string {
@@ -323,7 +547,7 @@ type SetRequest struct {
 func (x *SetRequest) Reset() {
 	*x = SetRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[5]
+		mi := &file_index_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -336,7 +560,7 @@ func (x *SetRequest) String() string {
 func (*SetRequest) ProtoMessage() {}
 
 func (x *SetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[5]
+	mi := &file_index_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -349,7 +573,7 @@ func (x *SetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetRequest.ProtoReflect.Descriptor instead.
 func (*SetRequest) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{5}
+	return file_index_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SetRequest) GetKey() string {
@@ -386,7 +610,7 @@ type AddExpireRequest struct {
 func (x *AddExpireRequest) Reset() {
 	*x = AddExpireRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[6]
+		mi := &file_index_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -399,7 +623,7 @@ func (x *AddExpireRequest) String() string {
 func (*AddExpireRequest) ProtoMessage() {}
 
 func (x *AddExpireRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[6]
+	mi := &file_index_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -412,7 +636,7 @@ func (x *AddExpireRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddExpireRequest.ProtoReflect.Descriptor instead.
 func (*AddExpireRequest) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{6}
+	return file_index_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AddExpireRequest) GetKey() string {
@@ -441,7 +665,7 @@ type MoveExpireRequest struct {
 func (x *MoveExpireRequest) Reset() {
 	*x = MoveExpireRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[7]
+		mi := &file_index_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -454,7 +678,7 @@ func (x *MoveExpireRequest) String() string {
 func (*MoveExpireRequest) ProtoMessage() {}
 
 func (x *MoveExpireRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[7]
+	mi := &file_index_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -467,7 +691,7 @@ func (x *MoveExpireRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveExpireRequest.ProtoReflect.Descriptor instead.
 func (*MoveExpireRequest) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{7}
+	return file_index_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MoveExpireRequest) GetKey() string {
@@ -491,7 +715,7 @@ type KeyChange struct {
 func (x *KeyChange) Reset() {
 	*x = KeyChange{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_index_proto_msgTypes[8]
+		mi := &file_index_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -504,7 +728,7 @@ func (x *KeyChange) String() string {
 func (*KeyChange) ProtoMessage() {}
 
 func (x *KeyChange) ProtoReflect() protoreflect.Message {
-	mi := &file_index_proto_msgTypes[8]
+	mi := &file_index_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -517,7 +741,7 @@ func (x *KeyChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyChange.ProtoReflect.Descriptor instead.
 func (*KeyChange) Descriptor() ([]byte, []int) {
-	return file_index_proto_rawDescGZIP(), []int{8}
+	return file_index_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *KeyChange) GetKey() string {
@@ -541,79 +765,399 @@ func (x *KeyChange) GetType() WatchType {
 	return WatchType_WATCH_TYPE_PUT
 }
 
+// 续约请求结构
+type RenewLockEntryRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key     string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`          // 锁
+	Ttl     int64  `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"`         // 过期时间
+	LeaseID int64  `protobuf:"varint,3,opt,name=leaseID,proto3" json:"leaseID,omitempty"` // 租约ID
+}
+
+func (x *RenewLockEntryRequest) Reset() {
+	*x = RenewLockEntryRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RenewLockEntryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenewLockEntryRequest) ProtoMessage() {}
+
+func (x *RenewLockEntryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenewLockEntryRequest.ProtoReflect.Descriptor instead.
+func (*RenewLockEntryRequest) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RenewLockEntryRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *RenewLockEntryRequest) GetTtl() int64 {
+	if x != nil {
+		return x.Ttl
+	}
+	return 0
+}
+
+func (x *RenewLockEntryRequest) GetLeaseID() int64 {
+	if x != nil {
+		return x.LeaseID
+	}
+	return 0
+}
+
+// 解锁请求结构
+type UnLockEntryRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key     string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`          // 锁
+	LeaseID int64  `protobuf:"varint,2,opt,name=leaseID,proto3" json:"leaseID,omitempty"` // 租约ID
+}
+
+func (x *UnLockEntryRequest) Reset() {
+	*x = UnLockEntryRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnLockEntryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnLockEntryRequest) ProtoMessage() {}
+
+func (x *UnLockEntryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnLockEntryRequest.ProtoReflect.Descriptor instead.
+func (*UnLockEntryRequest) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UnLockEntryRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *UnLockEntryRequest) GetLeaseID() int64 {
+	if x != nil {
+		return x.LeaseID
+	}
+	return 0
+}
+
+// 锁定请求结构
+type LockEntryRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`  // 锁
+	Ttl int64  `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"` // 过期时间
+}
+
+func (x *LockEntryRequest) Reset() {
+	*x = LockEntryRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LockEntryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LockEntryRequest) ProtoMessage() {}
+
+func (x *LockEntryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LockEntryRequest.ProtoReflect.Descriptor instead.
+func (*LockEntryRequest) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *LockEntryRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *LockEntryRequest) GetTtl() int64 {
+	if x != nil {
+		return x.Ttl
+	}
+	return 0
+}
+
+// 锁信息
+type LockEntryResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key     string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`          // 锁
+	Ttl     int64  `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"`         // 过期时间
+	LeaseID int64  `protobuf:"varint,3,opt,name=leaseID,proto3" json:"leaseID,omitempty"` // 租约ID
+	Lock    bool   `protobuf:"varint,4,opt,name=lock,proto3" json:"lock,omitempty"`       // 是否加锁
+}
+
+func (x *LockEntryResponse) Reset() {
+	*x = LockEntryResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_index_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LockEntryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LockEntryResponse) ProtoMessage() {}
+
+func (x *LockEntryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_index_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LockEntryResponse.ProtoReflect.Descriptor instead.
+func (*LockEntryResponse) Descriptor() ([]byte, []int) {
+	return file_index_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *LockEntryResponse) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *LockEntryResponse) GetTtl() int64 {
+	if x != nil {
+		return x.Ttl
+	}
+	return 0
+}
+
+func (x *LockEntryResponse) GetLeaseID() int64 {
+	if x != nil {
+		return x.LeaseID
+	}
+	return 0
+}
+
+func (x *LockEntryResponse) GetLock() bool {
+	if x != nil {
+		return x.Lock
+	}
+	return false
+}
+
 var File_index_proto protoreflect.FileDescriptor
 
 var file_index_proto_rawDesc = []byte{
 	0x0a, 0x0b, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x2e, 0x0a,
-	0x0e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x1c, 0x0a, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x22, 0x21, 0x0a,
-	0x0b, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04,
-	0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61,
-	0x22, 0x22, 0x0a, 0x0c, 0x4b, 0x65, 0x79, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04,
-	0x64, 0x61, 0x74, 0x61, 0x22, 0x1e, 0x0a, 0x0a, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x22, 0x4a, 0x0a, 0x0a, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69,
-	0x72, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65,
-	0x22, 0x3c, 0x0a, 0x10, 0x41, 0x64, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x22, 0x25,
-	0x0a, 0x11, 0x4d, 0x6f, 0x76, 0x65, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x57, 0x0a, 0x09, 0x4b, 0x65, 0x79, 0x43, 0x68, 0x61, 0x6e,
-	0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x24, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x57,
-	0x61, 0x74, 0x63, 0x68, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x2a, 0x84,
-	0x01, 0x0a, 0x09, 0x57, 0x61, 0x74, 0x63, 0x68, 0x54, 0x79, 0x70, 0x65, 0x12, 0x12, 0x0a, 0x0e,
-	0x57, 0x41, 0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x50, 0x55, 0x54, 0x10, 0x00,
-	0x12, 0x15, 0x0a, 0x11, 0x57, 0x41, 0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x44,
-	0x45, 0x4c, 0x45, 0x54, 0x45, 0x10, 0x01, 0x12, 0x15, 0x0a, 0x11, 0x57, 0x41, 0x54, 0x43, 0x48,
-	0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x45, 0x58, 0x50, 0x49, 0x52, 0x45, 0x10, 0x02, 0x12, 0x1a,
-	0x0a, 0x16, 0x57, 0x41, 0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x4d, 0x4f, 0x56,
-	0x45, 0x5f, 0x45, 0x58, 0x50, 0x49, 0x52, 0x45, 0x10, 0x03, 0x12, 0x19, 0x0a, 0x15, 0x57, 0x41,
-	0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x41, 0x44, 0x44, 0x5f, 0x45, 0x58, 0x50,
-	0x49, 0x52, 0x45, 0x10, 0x04, 0x32, 0x6f, 0x0a, 0x10, 0x43, 0x61, 0x64, 0x62, 0x43, 0x6c, 0x69,
-	0x65, 0x6e, 0x74, 0x48, 0x65, 0x6c, 0x70, 0x65, 0x72, 0x12, 0x30, 0x0a, 0x09, 0x4e, 0x65, 0x77,
-	0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6c, 0x69,
-	0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x29, 0x0a, 0x0b, 0x43,
-	0x6c, 0x6f, 0x73, 0x65, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x86, 0x03, 0x0a, 0x0f, 0x43, 0x61, 0x64, 0x62, 0x53,
-	0x74, 0x6f, 0x72, 0x65, 0x48, 0x65, 0x6c, 0x70, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x03, 0x47, 0x65,
-	0x74, 0x12, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x65, 0x74,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x12,
-	0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x12, 0x29, 0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x11, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x29, 0x0a, 0x04, 0x4b,
-	0x65, 0x79, 0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74,
-	0x79, 0x1a, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x09, 0x41, 0x64, 0x64, 0x45, 0x78, 0x70,
-	0x69, 0x72, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x64, 0x64, 0x45,
-	0x78, 0x70, 0x69, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x34, 0x0a, 0x0a, 0x4d, 0x6f,
-	0x76, 0x65, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x12, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2e, 0x4d, 0x6f, 0x76, 0x65, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x12, 0x2e, 0x0a, 0x05, 0x57, 0x61, 0x74, 0x63, 0x68, 0x12, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x10, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x30, 0x01,
-	0x12, 0x2d, 0x0a, 0x0a, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x57, 0x61, 0x74, 0x63, 0x68, 0x12, 0x11,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x42,
-	0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x46, 0x0a,
+	0x0c, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a,
+	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xcd, 0x01, 0x0a, 0x0f, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x18, 0x0a,
+	0x07, 0x67, 0x69, 0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x67, 0x69, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x67, 0x69, 0x74, 0x42, 0x72,
+	0x61, 0x6e, 0x63, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x67, 0x69, 0x74, 0x42,
+	0x72, 0x61, 0x6e, 0x63, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x54, 0x69,
+	0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x54,
+	0x69, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x67, 0x6f, 0x6f, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x67, 0x6f, 0x6f, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x67, 0x6f, 0x56, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x67, 0x6f, 0x56, 0x65,
+	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x89, 0x01, 0x0a, 0x11, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62,
+	0x65, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x12, 0x20, 0x0a, 0x0b, 0x6d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x55, 0x73, 0x61,
+	0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x02, 0x52, 0x0b, 0x6d, 0x65, 0x6d, 0x6f, 0x72, 0x79,
+	0x55, 0x73, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x70, 0x75, 0x55, 0x73, 0x61, 0x67,
+	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x02, 0x52, 0x08, 0x63, 0x70, 0x75, 0x55, 0x73, 0x61, 0x67,
+	0x65, 0x22, 0x2e, 0x0a, 0x0e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65,
+	0x79, 0x22, 0x21, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
+	0x64, 0x61, 0x74, 0x61, 0x22, 0x22, 0x0a, 0x0c, 0x4b, 0x65, 0x79, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x1e, 0x0a, 0x0a, 0x4b, 0x65, 0x79, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x4a, 0x0a, 0x0a, 0x53, 0x65, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06,
+	0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x65, 0x78,
+	0x70, 0x69, 0x72, 0x65, 0x22, 0x3c, 0x0a, 0x10, 0x41, 0x64, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x65, 0x78,
+	0x70, 0x69, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69,
+	0x72, 0x65, 0x22, 0x25, 0x0a, 0x11, 0x4d, 0x6f, 0x76, 0x65, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x57, 0x0a, 0x09, 0x4b, 0x65, 0x79,
+	0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x24, 0x0a, 0x04,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x57, 0x61, 0x74, 0x63, 0x68, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79,
+	0x70, 0x65, 0x22, 0x55, 0x0a, 0x15, 0x52, 0x65, 0x6e, 0x65, 0x77, 0x4c, 0x6f, 0x63, 0x6b, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b,
+	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x10, 0x0a,
+	0x03, 0x74, 0x74, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x74, 0x74, 0x6c, 0x12,
+	0x18, 0x0a, 0x07, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03,
+	0x52, 0x07, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x22, 0x40, 0x0a, 0x12, 0x55, 0x6e, 0x4c,
+	0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65,
+	0x79, 0x12, 0x18, 0x0a, 0x07, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x07, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x22, 0x36, 0x0a, 0x10, 0x4c,
+	0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x74, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03,
+	0x74, 0x74, 0x6c, 0x22, 0x65, 0x0a, 0x11, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x74,
+	0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x74, 0x74, 0x6c, 0x12, 0x18, 0x0a, 0x07,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x49, 0x44, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x6c, 0x6f, 0x63, 0x6b, 0x2a, 0x84, 0x01, 0x0a, 0x09, 0x57,
+	0x61, 0x74, 0x63, 0x68, 0x54, 0x79, 0x70, 0x65, 0x12, 0x12, 0x0a, 0x0e, 0x57, 0x41, 0x54, 0x43,
+	0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x50, 0x55, 0x54, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11,
+	0x57, 0x41, 0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x44, 0x45, 0x4c, 0x45, 0x54,
+	0x45, 0x10, 0x01, 0x12, 0x15, 0x0a, 0x11, 0x57, 0x41, 0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50,
+	0x45, 0x5f, 0x45, 0x58, 0x50, 0x49, 0x52, 0x45, 0x10, 0x02, 0x12, 0x1a, 0x0a, 0x16, 0x57, 0x41,
+	0x54, 0x43, 0x48, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x4d, 0x4f, 0x56, 0x45, 0x5f, 0x45, 0x58,
+	0x50, 0x49, 0x52, 0x45, 0x10, 0x03, 0x12, 0x19, 0x0a, 0x15, 0x57, 0x41, 0x54, 0x43, 0x48, 0x5f,
+	0x54, 0x59, 0x50, 0x45, 0x5f, 0x41, 0x44, 0x44, 0x5f, 0x45, 0x58, 0x50, 0x49, 0x52, 0x45, 0x10,
+	0x04, 0x32, 0x9f, 0x01, 0x0a, 0x0c, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x48, 0x65, 0x6c, 0x70,
+	0x65, 0x72, 0x12, 0x29, 0x0a, 0x04, 0x50, 0x69, 0x6e, 0x67, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a,
+	0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x56,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x33,
+	0x0a, 0x09, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x32, 0x6f, 0x0a, 0x10, 0x43, 0x61, 0x64, 0x62, 0x43, 0x6c, 0x69, 0x65, 0x6e,
+	0x74, 0x48, 0x65, 0x6c, 0x70, 0x65, 0x72, 0x12, 0x30, 0x0a, 0x09, 0x4e, 0x65, 0x77, 0x43, 0x6c,
+	0x69, 0x65, 0x6e, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70,
+	0x74, 0x79, 0x1a, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x29, 0x0a, 0x0b, 0x43, 0x6c, 0x6f,
+	0x73, 0x65, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x32, 0x86, 0x03, 0x0a, 0x0f, 0x43, 0x61, 0x64, 0x62, 0x53, 0x74, 0x6f,
+	0x72, 0x65, 0x48, 0x65, 0x6c, 0x70, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x03, 0x47, 0x65, 0x74, 0x12,
+	0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x12, 0x11, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x29,
+	0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x29, 0x0a, 0x04, 0x4b, 0x65, 0x79,
+	0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
+	0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x09, 0x41, 0x64, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72,
+	0x65, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x64, 0x64, 0x45, 0x78, 0x70,
+	0x69, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x34, 0x0a, 0x0a, 0x4d, 0x6f, 0x76, 0x65,
+	0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x12, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d,
+	0x6f, 0x76, 0x65, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x2e,
+	0x0a, 0x05, 0x57, 0x61, 0x74, 0x63, 0x68, 0x12, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x10, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x30, 0x01, 0x12, 0x2d,
+	0x0a, 0x0a, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x57, 0x61, 0x74, 0x63, 0x68, 0x12, 0x11, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x81, 0x02,
+	0x0a, 0x0e, 0x43, 0x61, 0x64, 0x62, 0x4c, 0x6f, 0x63, 0x6b, 0x48, 0x65, 0x6c, 0x70, 0x65, 0x72,
+	0x12, 0x39, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x55,
+	0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x19, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x55, 0x6e,
+	0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x43,
+	0x0a, 0x09, 0x52, 0x65, 0x6e, 0x65, 0x77, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x1c, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65, 0x6e, 0x65, 0x77, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x07, 0x54, 0x72, 0x79, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x17,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x4c, 0x6f, 0x63, 0x6b, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -629,43 +1173,64 @@ func file_index_proto_rawDescGZIP() []byte {
 }
 
 var file_index_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_index_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_index_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_index_proto_goTypes = []interface{}{
-	(WatchType)(0),            // 0: proto.WatchType
-	(*Empty)(nil),             // 1: proto.Empty
-	(*ClientResponse)(nil),    // 2: proto.ClientResponse
-	(*GetResponse)(nil),       // 3: proto.GetResponse
-	(*KeysResponse)(nil),      // 4: proto.KeysResponse
-	(*KeyRequest)(nil),        // 5: proto.KeyRequest
-	(*SetRequest)(nil),        // 6: proto.SetRequest
-	(*AddExpireRequest)(nil),  // 7: proto.AddExpireRequest
-	(*MoveExpireRequest)(nil), // 8: proto.MoveExpireRequest
-	(*KeyChange)(nil),         // 9: proto.KeyChange
+	(WatchType)(0),                // 0: proto.WatchType
+	(*Empty)(nil),                 // 1: proto.Empty
+	(*PingResponse)(nil),          // 2: proto.PingResponse
+	(*VersionResponse)(nil),       // 3: proto.VersionResponse
+	(*HeartbeatResponse)(nil),     // 4: proto.HeartbeatResponse
+	(*ClientResponse)(nil),        // 5: proto.ClientResponse
+	(*GetResponse)(nil),           // 6: proto.GetResponse
+	(*KeysResponse)(nil),          // 7: proto.KeysResponse
+	(*KeyRequest)(nil),            // 8: proto.KeyRequest
+	(*SetRequest)(nil),            // 9: proto.SetRequest
+	(*AddExpireRequest)(nil),      // 10: proto.AddExpireRequest
+	(*MoveExpireRequest)(nil),     // 11: proto.MoveExpireRequest
+	(*KeyChange)(nil),             // 12: proto.KeyChange
+	(*RenewLockEntryRequest)(nil), // 13: proto.RenewLockEntryRequest
+	(*UnLockEntryRequest)(nil),    // 14: proto.UnLockEntryRequest
+	(*LockEntryRequest)(nil),      // 15: proto.LockEntryRequest
+	(*LockEntryResponse)(nil),     // 16: proto.LockEntryResponse
 }
 var file_index_proto_depIdxs = []int32{
 	0,  // 0: proto.KeyChange.type:type_name -> proto.WatchType
-	1,  // 1: proto.CadbClientHelper.NewClient:input_type -> proto.Empty
-	1,  // 2: proto.CadbClientHelper.CloseClient:input_type -> proto.Empty
-	5,  // 3: proto.CadbStoreHelper.Get:input_type -> proto.KeyRequest
-	6,  // 4: proto.CadbStoreHelper.Set:input_type -> proto.SetRequest
-	5,  // 5: proto.CadbStoreHelper.Delete:input_type -> proto.KeyRequest
-	1,  // 6: proto.CadbStoreHelper.Keys:input_type -> proto.Empty
-	7,  // 7: proto.CadbStoreHelper.AddExpire:input_type -> proto.AddExpireRequest
-	8,  // 8: proto.CadbStoreHelper.MoveExpire:input_type -> proto.MoveExpireRequest
-	5,  // 9: proto.CadbStoreHelper.Watch:input_type -> proto.KeyRequest
-	5,  // 10: proto.CadbStoreHelper.CloseWatch:input_type -> proto.KeyRequest
-	2,  // 11: proto.CadbClientHelper.NewClient:output_type -> proto.ClientResponse
-	1,  // 12: proto.CadbClientHelper.CloseClient:output_type -> proto.Empty
-	3,  // 13: proto.CadbStoreHelper.Get:output_type -> proto.GetResponse
-	1,  // 14: proto.CadbStoreHelper.Set:output_type -> proto.Empty
-	1,  // 15: proto.CadbStoreHelper.Delete:output_type -> proto.Empty
-	4,  // 16: proto.CadbStoreHelper.Keys:output_type -> proto.KeysResponse
-	1,  // 17: proto.CadbStoreHelper.AddExpire:output_type -> proto.Empty
-	1,  // 18: proto.CadbStoreHelper.MoveExpire:output_type -> proto.Empty
-	9,  // 19: proto.CadbStoreHelper.Watch:output_type -> proto.KeyChange
-	1,  // 20: proto.CadbStoreHelper.CloseWatch:output_type -> proto.Empty
-	11, // [11:21] is the sub-list for method output_type
-	1,  // [1:11] is the sub-list for method input_type
+	1,  // 1: proto.CommonHelper.Ping:input_type -> proto.Empty
+	1,  // 2: proto.CommonHelper.Version:input_type -> proto.Empty
+	1,  // 3: proto.CommonHelper.Heartbeat:input_type -> proto.Empty
+	1,  // 4: proto.CadbClientHelper.NewClient:input_type -> proto.Empty
+	1,  // 5: proto.CadbClientHelper.CloseClient:input_type -> proto.Empty
+	8,  // 6: proto.CadbStoreHelper.Get:input_type -> proto.KeyRequest
+	9,  // 7: proto.CadbStoreHelper.Set:input_type -> proto.SetRequest
+	8,  // 8: proto.CadbStoreHelper.Delete:input_type -> proto.KeyRequest
+	1,  // 9: proto.CadbStoreHelper.Keys:input_type -> proto.Empty
+	10, // 10: proto.CadbStoreHelper.AddExpire:input_type -> proto.AddExpireRequest
+	11, // 11: proto.CadbStoreHelper.MoveExpire:input_type -> proto.MoveExpireRequest
+	8,  // 12: proto.CadbStoreHelper.Watch:input_type -> proto.KeyRequest
+	8,  // 13: proto.CadbStoreHelper.CloseWatch:input_type -> proto.KeyRequest
+	15, // 14: proto.CadbLockHelper.Lock:input_type -> proto.LockEntryRequest
+	14, // 15: proto.CadbLockHelper.Unlock:input_type -> proto.UnLockEntryRequest
+	13, // 16: proto.CadbLockHelper.RenewLock:input_type -> proto.RenewLockEntryRequest
+	15, // 17: proto.CadbLockHelper.TryLock:input_type -> proto.LockEntryRequest
+	2,  // 18: proto.CommonHelper.Ping:output_type -> proto.PingResponse
+	3,  // 19: proto.CommonHelper.Version:output_type -> proto.VersionResponse
+	4,  // 20: proto.CommonHelper.Heartbeat:output_type -> proto.HeartbeatResponse
+	5,  // 21: proto.CadbClientHelper.NewClient:output_type -> proto.ClientResponse
+	1,  // 22: proto.CadbClientHelper.CloseClient:output_type -> proto.Empty
+	6,  // 23: proto.CadbStoreHelper.Get:output_type -> proto.GetResponse
+	1,  // 24: proto.CadbStoreHelper.Set:output_type -> proto.Empty
+	1,  // 25: proto.CadbStoreHelper.Delete:output_type -> proto.Empty
+	7,  // 26: proto.CadbStoreHelper.Keys:output_type -> proto.KeysResponse
+	1,  // 27: proto.CadbStoreHelper.AddExpire:output_type -> proto.Empty
+	1,  // 28: proto.CadbStoreHelper.MoveExpire:output_type -> proto.Empty
+	12, // 29: proto.CadbStoreHelper.Watch:output_type -> proto.KeyChange
+	1,  // 30: proto.CadbStoreHelper.CloseWatch:output_type -> proto.Empty
+	16, // 31: proto.CadbLockHelper.Lock:output_type -> proto.LockEntryResponse
+	1,  // 32: proto.CadbLockHelper.Unlock:output_type -> proto.Empty
+	16, // 33: proto.CadbLockHelper.RenewLock:output_type -> proto.LockEntryResponse
+	16, // 34: proto.CadbLockHelper.TryLock:output_type -> proto.LockEntryResponse
+	18, // [18:35] is the sub-list for method output_type
+	1,  // [1:18] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -690,7 +1255,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientResponse); i {
+			switch v := v.(*PingResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -702,7 +1267,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetResponse); i {
+			switch v := v.(*VersionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -714,7 +1279,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*KeysResponse); i {
+			switch v := v.(*HeartbeatResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -726,7 +1291,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*KeyRequest); i {
+			switch v := v.(*ClientResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -738,7 +1303,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetRequest); i {
+			switch v := v.(*GetResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -750,7 +1315,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddExpireRequest); i {
+			switch v := v.(*KeysResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -762,7 +1327,7 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MoveExpireRequest); i {
+			switch v := v.(*KeyRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -774,7 +1339,91 @@ func file_index_proto_init() {
 			}
 		}
 		file_index_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddExpireRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MoveExpireRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*KeyChange); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RenewLockEntryRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UnLockEntryRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LockEntryRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_index_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LockEntryResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -792,9 +1441,9 @@ func file_index_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_index_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   16,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   4,
 		},
 		GoTypes:           file_index_proto_goTypes,
 		DependencyIndexes: file_index_proto_depIdxs,
@@ -815,13 +1464,155 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
+// CommonHelperClient is the client API for CommonHelper service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type CommonHelperClient interface {
+	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PingResponse, error)
+	Version(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	Heartbeat(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*HeartbeatResponse, error)
+}
+
+type commonHelperClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCommonHelperClient(cc grpc.ClientConnInterface) CommonHelperClient {
+	return &commonHelperClient{cc}
+}
+
+func (c *commonHelperClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PingResponse, error) {
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, "/proto.CommonHelper/Ping", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *commonHelperClient) Version(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
+	out := new(VersionResponse)
+	err := c.cc.Invoke(ctx, "/proto.CommonHelper/Version", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *commonHelperClient) Heartbeat(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
+	out := new(HeartbeatResponse)
+	err := c.cc.Invoke(ctx, "/proto.CommonHelper/Heartbeat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CommonHelperServer is the server API for CommonHelper service.
+type CommonHelperServer interface {
+	Ping(context.Context, *Empty) (*PingResponse, error)
+	Version(context.Context, *Empty) (*VersionResponse, error)
+	Heartbeat(context.Context, *Empty) (*HeartbeatResponse, error)
+}
+
+// UnimplementedCommonHelperServer can be embedded to have forward compatible implementations.
+type UnimplementedCommonHelperServer struct {
+}
+
+func (*UnimplementedCommonHelperServer) Ping(context.Context, *Empty) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (*UnimplementedCommonHelperServer) Version(context.Context, *Empty) (*VersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
+}
+func (*UnimplementedCommonHelperServer) Heartbeat(context.Context, *Empty) (*HeartbeatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
+}
+
+func RegisterCommonHelperServer(s *grpc.Server, srv CommonHelperServer) {
+	s.RegisterService(&_CommonHelper_serviceDesc, srv)
+}
+
+func _CommonHelper_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommonHelperServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CommonHelper/Ping",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommonHelperServer).Ping(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CommonHelper_Version_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommonHelperServer).Version(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CommonHelper/Version",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommonHelperServer).Version(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CommonHelper_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommonHelperServer).Heartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CommonHelper/Heartbeat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommonHelperServer).Heartbeat(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _CommonHelper_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.CommonHelper",
+	HandlerType: (*CommonHelperServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _CommonHelper_Ping_Handler,
+		},
+		{
+			MethodName: "Version",
+			Handler:    _CommonHelper_Version_Handler,
+		},
+		{
+			MethodName: "Heartbeat",
+			Handler:    _CommonHelper_Heartbeat_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "index.proto",
+}
+
 // CadbClientHelperClient is the client API for CadbClientHelper service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CadbClientHelperClient interface {
-	// 新建客户端
 	NewClient(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ClientResponse, error)
-	// 关闭客户端
 	CloseClient(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -853,9 +1644,7 @@ func (c *cadbClientHelperClient) CloseClient(ctx context.Context, in *Empty, opt
 
 // CadbClientHelperServer is the server API for CadbClientHelper service.
 type CadbClientHelperServer interface {
-	// 新建客户端
 	NewClient(context.Context, *Empty) (*ClientResponse, error)
-	// 关闭客户端
 	CloseClient(context.Context, *Empty) (*Empty, error)
 }
 
@@ -931,21 +1720,13 @@ var _CadbClientHelper_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CadbStoreHelperClient interface {
-	// 获取数据
 	Get(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	// 设置数据
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*Empty, error)
-	// 删除数据
 	Delete(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*Empty, error)
-	// 获取 keys
 	Keys(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*KeysResponse, error)
-	// 设置key的过期时间
 	AddExpire(ctx context.Context, in *AddExpireRequest, opts ...grpc.CallOption) (*Empty, error)
-	// 移除 key的过期时间
 	MoveExpire(ctx context.Context, in *MoveExpireRequest, opts ...grpc.CallOption) (*Empty, error)
-	// 监听 key的变化
 	Watch(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (CadbStoreHelper_WatchClient, error)
-	// 关闭监听
 	CloseWatch(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -1054,21 +1835,13 @@ func (c *cadbStoreHelperClient) CloseWatch(ctx context.Context, in *KeyRequest, 
 
 // CadbStoreHelperServer is the server API for CadbStoreHelper service.
 type CadbStoreHelperServer interface {
-	// 获取数据
 	Get(context.Context, *KeyRequest) (*GetResponse, error)
-	// 设置数据
 	Set(context.Context, *SetRequest) (*Empty, error)
-	// 删除数据
 	Delete(context.Context, *KeyRequest) (*Empty, error)
-	// 获取 keys
 	Keys(context.Context, *Empty) (*KeysResponse, error)
-	// 设置key的过期时间
 	AddExpire(context.Context, *AddExpireRequest) (*Empty, error)
-	// 移除 key的过期时间
 	MoveExpire(context.Context, *MoveExpireRequest) (*Empty, error)
-	// 监听 key的变化
 	Watch(*KeyRequest, CadbStoreHelper_WatchServer) error
-	// 关闭监听
 	CloseWatch(context.Context, *KeyRequest) (*Empty, error)
 }
 
@@ -1292,5 +2065,185 @@ var _CadbStoreHelper_serviceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
+	Metadata: "index.proto",
+}
+
+// CadbLockHelperClient is the client API for CadbLockHelper service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type CadbLockHelperClient interface {
+	Lock(ctx context.Context, in *LockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error)
+	Unlock(ctx context.Context, in *UnLockEntryRequest, opts ...grpc.CallOption) (*Empty, error)
+	RenewLock(ctx context.Context, in *RenewLockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error)
+	TryLock(ctx context.Context, in *LockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error)
+}
+
+type cadbLockHelperClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCadbLockHelperClient(cc grpc.ClientConnInterface) CadbLockHelperClient {
+	return &cadbLockHelperClient{cc}
+}
+
+func (c *cadbLockHelperClient) Lock(ctx context.Context, in *LockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error) {
+	out := new(LockEntryResponse)
+	err := c.cc.Invoke(ctx, "/proto.CadbLockHelper/Lock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cadbLockHelperClient) Unlock(ctx context.Context, in *UnLockEntryRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/proto.CadbLockHelper/Unlock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cadbLockHelperClient) RenewLock(ctx context.Context, in *RenewLockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error) {
+	out := new(LockEntryResponse)
+	err := c.cc.Invoke(ctx, "/proto.CadbLockHelper/RenewLock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cadbLockHelperClient) TryLock(ctx context.Context, in *LockEntryRequest, opts ...grpc.CallOption) (*LockEntryResponse, error) {
+	out := new(LockEntryResponse)
+	err := c.cc.Invoke(ctx, "/proto.CadbLockHelper/TryLock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CadbLockHelperServer is the server API for CadbLockHelper service.
+type CadbLockHelperServer interface {
+	Lock(context.Context, *LockEntryRequest) (*LockEntryResponse, error)
+	Unlock(context.Context, *UnLockEntryRequest) (*Empty, error)
+	RenewLock(context.Context, *RenewLockEntryRequest) (*LockEntryResponse, error)
+	TryLock(context.Context, *LockEntryRequest) (*LockEntryResponse, error)
+}
+
+// UnimplementedCadbLockHelperServer can be embedded to have forward compatible implementations.
+type UnimplementedCadbLockHelperServer struct {
+}
+
+func (*UnimplementedCadbLockHelperServer) Lock(context.Context, *LockEntryRequest) (*LockEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Lock not implemented")
+}
+func (*UnimplementedCadbLockHelperServer) Unlock(context.Context, *UnLockEntryRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Unlock not implemented")
+}
+func (*UnimplementedCadbLockHelperServer) RenewLock(context.Context, *RenewLockEntryRequest) (*LockEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenewLock not implemented")
+}
+func (*UnimplementedCadbLockHelperServer) TryLock(context.Context, *LockEntryRequest) (*LockEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TryLock not implemented")
+}
+
+func RegisterCadbLockHelperServer(s *grpc.Server, srv CadbLockHelperServer) {
+	s.RegisterService(&_CadbLockHelper_serviceDesc, srv)
+}
+
+func _CadbLockHelper_Lock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LockEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CadbLockHelperServer).Lock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CadbLockHelper/Lock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CadbLockHelperServer).Lock(ctx, req.(*LockEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CadbLockHelper_Unlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnLockEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CadbLockHelperServer).Unlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CadbLockHelper/Unlock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CadbLockHelperServer).Unlock(ctx, req.(*UnLockEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CadbLockHelper_RenewLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenewLockEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CadbLockHelperServer).RenewLock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CadbLockHelper/RenewLock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CadbLockHelperServer).RenewLock(ctx, req.(*RenewLockEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CadbLockHelper_TryLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LockEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CadbLockHelperServer).TryLock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.CadbLockHelper/TryLock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CadbLockHelperServer).TryLock(ctx, req.(*LockEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _CadbLockHelper_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.CadbLockHelper",
+	HandlerType: (*CadbLockHelperServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Lock",
+			Handler:    _CadbLockHelper_Lock_Handler,
+		},
+		{
+			MethodName: "Unlock",
+			Handler:    _CadbLockHelper_Unlock_Handler,
+		},
+		{
+			MethodName: "RenewLock",
+			Handler:    _CadbLockHelper_RenewLock_Handler,
+		},
+		{
+			MethodName: "TryLock",
+			Handler:    _CadbLockHelper_TryLock_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "index.proto",
 }

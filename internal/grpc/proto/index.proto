@@ -5,8 +5,33 @@ option go_package = "./proto";
 // 空数据
 message Empty {}
 
+// 返回
+message PingResponse {
+    string message = 1;    // 返回消息  返回 pong
+    int64 timestamp = 2;   // 时间戳 返回当前服务的时间戳
+}
+
+// 返回
+message VersionResponse {
+    string version = 1;      // 版本号
+    string appName = 2;      // 程序名称
+    string gitHash = 3;      // git hash
+    string gitBranch = 4;    // git 分支
+    string buildTime = 5;    // 构建时间
+    string goos = 6;         // 操作系统
+    string goVersion = 7;    // go 版本
+}
+
+// 心跳
+message HeartbeatResponse {
+    string message = 1;         // 返回消息
+    int64 timestamp = 2;        // 时间戳
+    float memoryUsage = 3;      // 内存使用情况
+    float cpuUsage = 4;         // CPU使用情况
+}
+
 message ClientResponse {
-    string secretKey = 2;
+    string secretKey = 2;       // 秘钥
 }
 
 // 获取数据的返回结构体
@@ -43,11 +68,11 @@ message MoveExpireRequest {
 }
 
 enum WatchType {
-    WATCH_TYPE_PUT = 0;
-    WATCH_TYPE_DELETE = 1;
-    WATCH_TYPE_EXPIRE = 2;
-    WATCH_TYPE_MOVE_EXPIRE = 3;
-    WATCH_TYPE_ADD_EXPIRE = 4;
+    WATCH_TYPE_PUT = 0;     // 设置数据
+    WATCH_TYPE_DELETE = 1;  // 删除数据
+    WATCH_TYPE_EXPIRE = 2;  // 设置过期时间
+    WATCH_TYPE_MOVE_EXPIRE = 3; // 移除过期时间
+    WATCH_TYPE_ADD_EXPIRE = 4; // 添加过期时间
 }
 
 // Key 的变化返回结构体
@@ -57,30 +82,62 @@ message KeyChange {
     WatchType type = 3;
 }
 
+// 通用接口
+service CommonHelper {
+    rpc Ping(Empty) returns (PingResponse); // 测试网络
+    rpc Version(Empty) returns (VersionResponse); // 获取版本号
+    rpc Heartbeat(Empty) returns (HeartbeatResponse); // 心跳
+}
+
 // 客户端操作接口
 service CadbClientHelper {
-    // 新建客户端
-    rpc NewClient(Empty) returns (ClientResponse);
-    // 关闭客户端
-    rpc CloseClient(Empty) returns(Empty);
+    rpc NewClient(Empty) returns (ClientResponse); // 新建客户端
+    rpc CloseClient(Empty) returns(Empty); // 关闭客户端
 }
 
 // 数据库操作接口
 service CadbStoreHelper {
-    // 获取数据
-    rpc Get(KeyRequest) returns (GetResponse);
-    // 设置数据
-    rpc Set(SetRequest) returns (Empty);
-    // 删除数据
-    rpc Delete(KeyRequest) returns (Empty);
-    // 获取 keys 
-    rpc Keys(Empty) returns (KeysResponse);
-    // 设置key的过期时间
-    rpc AddExpire(AddExpireRequest) returns (Empty);
-    // 移除 key的过期时间
-    rpc MoveExpire(MoveExpireRequest) returns (Empty);
-    // 监听 key的变化
-    rpc Watch(KeyRequest) returns (stream KeyChange);
-    // 关闭监听
-    rpc CloseWatch(KeyRequest) returns (Empty);
+    rpc Get(KeyRequest) returns (GetResponse); // 获取数据
+    rpc Set(SetRequest) returns (Empty); // 设置数据
+    rpc Delete(KeyRequest) returns (Empty); // 删除数据
+    rpc Keys(Empty) returns (KeysResponse); // 获取 keys 
+    rpc AddExpire(AddExpireRequest) returns (Empty); // 设置key的过期时间
+    rpc MoveExpire(MoveExpireRequest) returns (Empty); // 移除 key的过期时间
+    rpc Watch(KeyRequest) returns (stream KeyChange); // 监听 key的变化
+    rpc CloseWatch(KeyRequest) returns (Empty); // 关闭监听
+}
+
+// 续约请求结构
+message RenewLockEntryRequest {
+    string key = 1;         // 锁
+    int64 ttl = 2;          // 过期时间
+    int64 leaseID = 3;      // 租约ID
+}
+
+// 解锁请求结构
+message UnLockEntryRequest {
+    string key = 1;         // 锁
+    int64 leaseID = 2;      // 租约ID
+}
+
+// 锁定请求结构
+message LockEntryRequest {
+    string key = 1;         // 锁
+    int64 ttl = 2;          // 过期时间
+}
+
+// 锁信息
+message LockEntryResponse {
+    string key = 1;         // 锁
+    int64 ttl = 2;          // 过期时间
+    int64 leaseID = 3;      // 租约ID
+    bool lock = 4;          // 是否加锁
+}
+
+// 数据库锁操作接口
+service CadbLockHelper {
+    rpc Lock(LockEntryRequest) returns (LockEntryResponse); // 加锁
+    rpc Unlock(UnLockEntryRequest) returns (Empty); // 解锁
+    rpc RenewLock(RenewLockEntryRequest) returns (LockEntryResponse); // 续约
+    rpc TryLock(LockEntryRequest) returns (LockEntryResponse); // 尝试加锁 
 }

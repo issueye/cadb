@@ -9,6 +9,7 @@ import (
 
 	"go.etcd.io/bbolt"
 	"golang.corp.yxkj.com/orange/cadb/internal/utils"
+	pkgUtils "golang.corp.yxkj.com/orange/cadb/pkg/utils"
 )
 
 var DefaultBucket = []byte("kvstore")
@@ -20,9 +21,20 @@ type KVEntry struct {
 	Key   string `json:"key"`   // key
 }
 
+// 用于锁定 key 的结构体
+type LockKVEntry struct {
+	Value   string `json:"value"`    // key 的值  存储客户端的ID
+	TTL     int64  `json:"ttl"`      // 过期时间
+	Key     string `json:"key"`      // key
+	Lock    bool   `json:"lock"`     // 是否被锁定
+	LeaseID int64  `json:"lease_id"` // 租约ID
+}
+
 type KVStore struct {
 	// bolt 数据库
 	db *DB[KVEntry]
+	// bolt 数据库
+	lockdb *DB[LockKVEntry]
 	// 过期索引
 	expireIndex *ExpireIndex
 	// TTL 类型 0 表示秒，1 表示毫秒
@@ -45,8 +57,14 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 		return nil, err
 	}
 
+	lockdb, err := NewDB[LockKVEntry](fmt.Sprintf("%s.lock", dbPath))
+	if err != nil {
+		return nil, err
+	}
+
 	kv := &KVStore{
 		db:              db,
+		lockdb:          lockdb,
 		expireIndex:     NewExpireIndex(),
 		watchedKeys:     make(map[string][]*Watcher),
 		watchedKeysLock: &sync.Mutex{},
@@ -71,6 +89,11 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 		return nil, fmt.Errorf("create bucket %s failed: %w", DefaultBucket, err)
 	}
 
+	err = lockdb.CreateBucket(DefaultBucket)
+	if err != nil {
+		return nil, fmt.Errorf("create bucket %s failed: %w", DefaultBucket, err)
+	}
+
 	kv.startExpireLoop()
 
 	return kv, nil
@@ -81,7 +104,7 @@ type CaKey struct {
 	Bucket []byte
 }
 
-func (s *KVStore) ParseKey(key string) (caKey *CaKey) {
+func (s *KVStore) ParseKey(key string, isLock bool) (caKey *CaKey) {
 	keys := strings.Split(key, "-")
 	if len(keys) == 1 {
 		caKey = &CaKey{
@@ -94,7 +117,11 @@ func (s *KVStore) ParseKey(key string) (caKey *CaKey) {
 
 	// 如果key 不是 DefaultBucket 需要判断 Bucket 是否存在，如果不存在则创建
 	if !bytes.Equal(DefaultBucket, caKey.Bucket) {
-		s.db.CreateBucket(caKey.Bucket)
+		if isLock {
+			s.lockdb.CreateBucket(caKey.Bucket)
+		} else {
+			s.db.CreateBucket(caKey.Bucket)
+		}
 	}
 
 	return
@@ -112,7 +139,7 @@ func (s *KVStore) CheckClientSecretKey(secretKey string) bool {
 
 // Set 设置指定 key 的值
 func (s *KVStore) Set(key, value string, ttl int) error {
-	caKey := s.ParseKey(key)
+	caKey := s.ParseKey(key, false)
 
 	entry := &KVEntry{
 		Key:   key,
@@ -151,7 +178,7 @@ func (s *KVStore) Set(key, value string, ttl int) error {
 }
 
 func (s *KVStore) Get(key string) (entry *KVEntry, err error) {
-	caKey := s.ParseKey(key)
+	caKey := s.ParseKey(key, false)
 
 	entry, err = s.db.Get(caKey.Bucket, caKey.Key)
 	if err != nil {
@@ -169,7 +196,7 @@ func (s *KVStore) Get(key string) (entry *KVEntry, err error) {
 // Delete
 // 删除指定 key 的数据，支持多级 key
 func (s *KVStore) Delete(key string) error {
-	caKey := s.ParseKey(key)
+	caKey := s.ParseKey(key, false)
 
 	entry, err := s.db.DeleteR(caKey.Bucket, caKey.Key)
 	if err != nil {
@@ -193,7 +220,7 @@ func (s *KVStore) Delete(key string) error {
 // 移除指定 key 的 TTL
 // 如果 key 不存在，则不返回错误
 func (s *KVStore) RemoveTTL(key string) (err error) {
-	caKey := s.ParseKey(key)
+	caKey := s.ParseKey(key, false)
 
 	s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
 		// 如果数据已经过期
@@ -225,7 +252,7 @@ func (s *KVStore) RemoveTTL(key string) (err error) {
 // SetTTL
 // 设置指定 key 的 TTL
 func (s *KVStore) SetTTL(key string, ttl int64) (entry *KVEntry, err error) {
-	caKey := s.ParseKey(key)
+	caKey := s.ParseKey(key, false)
 
 	err = s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
 		entry = v
@@ -263,5 +290,134 @@ func (s *KVStore) Keys() (keys []string, err error) {
 			return nil
 		})
 	})
+	return
+}
+
+// Lock
+// 锁
+func (s *KVStore) Lock(clientId string, key string, ttl int64) (entry *LockKVEntry, err error) {
+	caKey := s.ParseKey(key, true)
+
+	entry, err = s.lockdb.Get(caKey.Bucket, caKey.Key)
+	if err != nil && err.Error() != "EOF" {
+		return
+	}
+
+	// 如果存在，则判断是否是同一个客户端，如果是则更新 TTL
+	if entry != nil && entry.Value == clientId {
+		if entry.Lock {
+			return nil, fmt.Errorf("key %s is locked by client %s", key, clientId)
+		}
+	}
+
+	entry = &LockKVEntry{
+		Lock:    true,
+		Value:   clientId,
+		Key:     key,
+		TTL:     ttl,
+		LeaseID: pkgUtils.GenID(),
+	}
+
+	err = s.lockdb.Put(caKey.Bucket, caKey.Key, entry)
+	return
+}
+
+// Unlock
+// 解锁
+func (s *KVStore) Unlock(clientId string, LeaseID int64, key string) (err error) {
+	// 将对应的key lock false ，value 制空
+	caKey := s.ParseKey(key, true)
+	// 查询是否存在，如果存在需要对比是否是同一个客户端，如果不是则返回错误
+	entry, err := s.lockdb.Get(caKey.Bucket, caKey.Key)
+	if err != nil {
+		return
+	}
+
+	// 如果不是同一个客户端，则返回错误
+	if entry.LeaseID != LeaseID {
+		return fmt.Errorf("key %s is not locked by client %s", key, clientId)
+	}
+
+	if entry.Value != clientId {
+		return fmt.Errorf("key %s is not locked by client %s", key, clientId)
+	}
+
+	return s.lockdb.Put(caKey.Bucket, caKey.Key, &LockKVEntry{Lock: false, Value: ""})
+}
+
+// TryLock
+// 尝试加锁
+func (s *KVStore) TryLock(clientId string, key string, ttl int64) (entry *LockKVEntry, err error) {
+	// 将对应的key lock false ，value 制空
+	caKey := s.ParseKey(key, true)
+	// 查询是否存在，如果存在需要对比是否是同一个客户端，如果不是则返回错误
+	entry, err = s.lockdb.Get(caKey.Bucket, caKey.Key)
+	if err != nil {
+		if err.Error() == "EOF" {
+			err = nil
+		} else {
+			return
+		}
+	}
+
+	// 如果不存在，则直接加锁
+	if entry == nil {
+		entry = &LockKVEntry{Key: key, TTL: ttl, Lock: true, Value: clientId, LeaseID: pkgUtils.GenID()}
+		err = s.lockdb.Put(caKey.Bucket, caKey.Key, entry)
+		return
+	}
+
+	// 如果当前锁被占用，则返回错误
+	if entry.Lock {
+		return nil, fmt.Errorf("key %s is locked by client %s", key, entry.Value)
+	}
+
+	// 如果 entry value 为空，则直接加锁
+	if entry.Value == "" {
+		entry = &LockKVEntry{Key: key, TTL: ttl, Lock: true, Value: clientId, LeaseID: pkgUtils.GenID()}
+		err = s.lockdb.Put(caKey.Bucket, caKey.Key, entry)
+		return
+	}
+
+	// 如果存在，则判断是否是同一个客户端，如果是则更新 TTL
+	if entry.Value == clientId {
+		entry.TTL = time.Now().Unix() + ttl
+		err = s.lockdb.Put(caKey.Bucket, caKey.Key, entry)
+		return
+	}
+
+	// 如果不是同一个客户端，则返回错误
+	if entry.Value != clientId {
+		return nil, fmt.Errorf("key %s is locked by client %s", key, entry.Value)
+	}
+
+	return
+}
+
+// 续约锁
+func (s *KVStore) RenewLock(clientId string, key string, LeaseID int64, ttl int64) (entry *LockKVEntry, err error) {
+	caKey := s.ParseKey(key, true)
+	// 查询是否存在，如果存在需要对比是否是同一个客户端，如果不是则返回错误
+	entry, err = s.lockdb.Get(caKey.Bucket, caKey.Key)
+	if err != nil {
+		return
+	}
+
+	// 如果不是同一个客户端，则返回错误
+	if entry.Value != clientId {
+		return nil, fmt.Errorf("key %s is not locked by client %s", key, clientId)
+	}
+
+	// 如果不是同一个续约ID，则返回错误
+	if entry.LeaseID != LeaseID {
+		return nil, fmt.Errorf("key %s is not locked by leaseID %d", key, LeaseID)
+	}
+
+	// 如果存在，则判断是否是同一个客户端，如果是则更新 TTL
+	if entry.Value == clientId {
+		entry.TTL = time.Now().Unix() + ttl
+		err = s.lockdb.Put(caKey.Bucket, caKey.Key, entry)
+	}
+
 	return
 }
