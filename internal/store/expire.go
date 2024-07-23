@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 	"sort"
@@ -112,14 +111,15 @@ func (s *KVStore) startExpireLoop() {
 
 				// 检查 key 是否被 Watch，如果被 Watch，则通知
 				for _, key := range keys {
-					fmt.Println("expire loop key", key)
 					have := s.HaveWatch(key)
 					if have {
 						// 获取数据
 						s.Notify(&Notify{
-							WT:    WT_Expire,
-							Key:   key,
-							Entry: &KVEntry{},
+							WT:  WT_EXPIRE,
+							Key: key,
+							Entry: &KVEntry{
+								Key: key,
+							},
 						})
 					}
 

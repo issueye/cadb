@@ -1,17 +1,13 @@
 package initialize
 
-import "golang.corp.yxkj.com/orange/cadb/internal/grpc"
-
 // 初始化
 func Init() {
+	// 初始化运行时目录
 	InitRuntime()
-
+	// 初始化日志配置
 	InitLog()
-
+	// 初始化数据库
 	InitStore()
-
-	go grpc.NewServer()
-
-	r := Server()
-	r.Run(":8080")
+	// 初始化grpc服务
+	InitGrpcServer()
 }

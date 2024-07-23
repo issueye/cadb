@@ -1,18 +1,13 @@
 package store
 
-import (
-	"net"
-
-	"github.com/gin-gonic/gin"
-)
-
 type WType int
 
 const (
-	WT_Put          WType = 0
-	WT_Del          WType = 1
-	WT_Expire       WType = 2
-	WT_ModifyExpire WType = 3
+	WT_PUT         WType = iota // 添加
+	WT_DELETE                   // 删除
+	WT_EXPIRE                   // 过期
+	WT_MOVE_EXPIRE              // 移除过期
+	WT_ADD_EXPIRE               // 添加过期
 )
 
 type Notify struct {
@@ -28,8 +23,7 @@ type WatchCallback func(WT WType, entry *KVEntry)
 type Watcher struct {
 	Id       string        // 观察者ID
 	CallBack WatchCallback // 回调函数
-	Ctx      *gin.Context  // 上下文
-	Conn     net.Conn
+	Close    chan struct{} // 关闭信号
 }
 
 // IsWatch
@@ -38,7 +32,6 @@ func (s *KVStore) HaveWatch(key string) bool {
 	s.watchedKeysLock.Lock()
 	defer s.watchedKeysLock.Unlock()
 
-	// fmt.Println("watchedKeys", s.watchedKeys)
 	_, ok := s.watchedKeys[key]
 	return ok
 }
@@ -50,7 +43,7 @@ func (s *KVStore) Watch(id string, key string, cb WatchCallback) *Watcher {
 	defer s.watchedKeysLock.Unlock()
 
 	// 将 key 和对应的 channel 添加到 watchedKeys 中
-	watcher := &Watcher{Id: id, CallBack: cb}
+	watcher := &Watcher{Id: id, CallBack: cb, Close: make(chan struct{})}
 	s.watchedKeys[key] = append(s.watchedKeys[key], watcher)
 
 	return watcher
@@ -75,17 +68,15 @@ func (s *KVStore) RemoveWatch(key string, id string) {
 	s.watchedKeysLock.Lock()
 	defer s.watchedKeysLock.Unlock()
 
-	// fmt.Println("RemoveWatch key: ", key)
-
 	// 将 key 和对应的 channel 从 watchedKeys 中移除
 	for i, w := range s.watchedKeys[key] {
 		if w.Id == id {
 			s.watchedKeys[key] = append(s.watchedKeys[key][:i], s.watchedKeys[key][i+1:]...)
-
+			close(w.Close)
 			// 如果该 key 没有订阅者了,则将 key 从 watchedKeys 中移除
-			if len(s.watchedKeys[key]) == 0 {
-				delete(s.watchedKeys, key)
-			}
+			// if len(s.watchedKeys[key]) == 0 {
+			// 	delete(s.watchedKeys, key)
+			// }
 			break
 		}
 	}

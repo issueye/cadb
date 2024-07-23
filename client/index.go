@@ -1,97 +1,114 @@
 package client
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/go-resty/resty/v2"
+	"golang.corp.yxkj.com/orange/cadb/internal/grpc/proto/proto"
+	"google.golang.org/grpc"
 )
 
-type Client struct {
-	SecretKey   string
-	restyClient *resty.Client
-	baseUrl     string
+type CadbClient struct {
+	clientHelper proto.CadbClientHelperClient
+	storeHelper  proto.CadbStoreHelperClient
+	secretKey    string
 }
 
-type RespData struct {
-	Value Value `json:"value"`
-}
-type Value struct {
-	Value string `json:"value"`
-	TTL   int    `json:"ttl"`
-	Key   string `json:"key"`
-}
-
-func NewClient(baseUrl string) (client *Client, err error) {
-	restyClient := resty.New()
-	restyClient.SetBaseURL(baseUrl)
-
-	result := make(map[string]string)
-
-	resp, err := restyClient.R().SetResult(&result).Get("/api/v1/client/new")
-	if err != nil || resp.StatusCode() != 200 {
+func NewCadbClient(addr string) (*CadbClient, error) {
+	// 连接 gRPC 服务器
+	conn, err := grpc.Dial(
+		addr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(appendSecretKeyToMetadata),
+		grpc.WithStreamInterceptor(appendStreamSecretKeyToMetadata),
+	)
+	if err != nil {
 		return nil, err
 	}
 
-	key := result["secret-key"]
+	// 创建 CadbClientHelper 客户端
+	clientHelper := proto.NewCadbClientHelperClient(conn)
 
-	restyClient.SetHeader("secret-key", key)
-	return &Client{
-		SecretKey:   key,
-		restyClient: restyClient,
-		baseUrl:     baseUrl,
+	// 创建新的客户端
+	resp, err := clientHelper.NewClient(context.Background(), &proto.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
+	token = resp.SecretKey
+
+	// 创建 CadbStoreHelper 客户端
+	storeHelper := proto.NewCadbStoreHelperClient(conn)
+
+	return &CadbClient{
+		clientHelper: clientHelper,
+		storeHelper:  storeHelper,
+		secretKey:    resp.SecretKey,
 	}, nil
 }
 
-// Ping
-func (c *Client) Ping() (err error) {
-	resp, err := c.restyClient.R().Get("/api/v1/client/ping")
-	if err != nil || resp.StatusCode() != 200 {
-		return err
-	}
-	return nil
+func (c *CadbClient) Close() error {
+	_, err := c.clientHelper.CloseClient(context.Background(), &proto.Empty{})
+	return err
 }
 
-// Set
-func (c *Client) Set(key string, value string) (err error) {
-	r := c.restyClient.R()
-	r.SetBody(map[string]string{"value": value})
-	url := fmt.Sprintf("/api/v1/store/set/%s", key)
-	resp, err := r.Post(url)
-	if err != nil || resp.StatusCode() != 200 {
-		return err
+func (c *CadbClient) Get(key string) (string, error) {
+	resp, err := c.storeHelper.Get(context.Background(), &proto.KeyRequest{
+		Key: key,
+	})
+	if err != nil {
+		return "", err
 	}
-
-	return nil
+	return resp.Data, nil
 }
 
-// Get
-func (c *Client) Get(key string) (v Value, err error) {
-	url := fmt.Sprintf("/api/v1/store/get/%s", key)
-
-	respData := new(RespData)
-	resp, err := c.restyClient.R().SetResult(respData).Get(url)
-	if err != nil || resp.StatusCode() != 200 {
-		return Value{}, err
-	}
-	return respData.Value, nil
+func (c *CadbClient) Set(key, data string, expire int64) error {
+	_, err := c.storeHelper.Set(context.Background(), &proto.SetRequest{
+		Key:    key,
+		Data:   data,
+		Expire: expire,
+	})
+	return err
 }
 
-// Delete
-func (c *Client) Delete(key string) (err error) {
-	url := fmt.Sprintf("/api/v1/store/delete/%s", key)
-	resp, err := c.restyClient.R().Delete(url)
-	if err != nil || resp.StatusCode() != 200 {
-		return err
-	}
-	return nil
+func (c *CadbClient) Delete(key string) error {
+	_, err := c.storeHelper.Delete(context.Background(), &proto.KeyRequest{
+		Key: key,
+	})
+	return err
 }
 
-// GetKeys
-func (c *Client) GetKeys() (keys []string, err error) {
-	resp, err := c.restyClient.R().Get("/api/v1/store/keys")
-	if err != nil || resp.StatusCode() != 200 {
+func (c *CadbClient) Keys() ([]string, error) {
+	resp, err := c.storeHelper.Keys(context.Background(), &proto.Empty{})
+	if err != nil {
 		return nil, err
 	}
+	return resp.Data, nil
+}
 
-	return nil, nil
+func (c *CadbClient) AddExpire(key string, expire int64) error {
+	_, err := c.storeHelper.AddExpire(context.Background(), &proto.AddExpireRequest{
+		Key:    key,
+		Expire: expire,
+	})
+	return err
+}
+
+func (c *CadbClient) MoveExpire(key string) error {
+	_, err := c.storeHelper.MoveExpire(context.Background(), &proto.MoveExpireRequest{
+		Key: key,
+	})
+	return err
+}
+
+func (c *CadbClient) Watch(key string) (proto.CadbStoreHelper_WatchClient, error) {
+	return c.storeHelper.Watch(context.Background(), &proto.KeyRequest{
+		Key: key,
+	})
+}
+
+func (c *CadbClient) CloseWatch(key string) error {
+	_, err := c.storeHelper.CloseWatch(context.Background(), &proto.KeyRequest{
+		Key: key,
+	})
+	return err
 }

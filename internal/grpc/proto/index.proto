@@ -32,22 +32,22 @@ message SetRequest {
 }
 
 // Expire 的请求结构体
-message ExpireRequest {
+message AddExpireRequest {
     string key = 1;
     int64 expire = 2;
 }
 
-// Persist 的请求结构体
-message PersistRequest {
+// MoveExpireRequest 的请求结构体
+message MoveExpireRequest {
     string key = 1;
 }
 
 enum WatchType {
-    WATCH_TYPE_ADD = 0;
-    WATCH_TYPE_UPDATE = 1;
-    WATCH_TYPE_DELETE = 2;
-    WATCH_TYPE_EXPIRE = 3;
-    WATCH_TYPE_PERSIST = 4;
+    WATCH_TYPE_PUT = 0;
+    WATCH_TYPE_DELETE = 1;
+    WATCH_TYPE_EXPIRE = 2;
+    WATCH_TYPE_MOVE_EXPIRE = 3;
+    WATCH_TYPE_ADD_EXPIRE = 4;
 }
 
 // Key 的变化返回结构体
@@ -57,12 +57,16 @@ message KeyChange {
     WatchType type = 3;
 }
 
-// 数据库操作接口
-service CadbStoreHelper {
+// 客户端操作接口
+service CadbClientHelper {
     // 新建客户端
     rpc NewClient(Empty) returns (ClientResponse);
     // 关闭客户端
     rpc CloseClient(Empty) returns(Empty);
+}
+
+// 数据库操作接口
+service CadbStoreHelper {
     // 获取数据
     rpc Get(KeyRequest) returns (GetResponse);
     // 设置数据
@@ -72,9 +76,9 @@ service CadbStoreHelper {
     // 获取 keys 
     rpc Keys(Empty) returns (KeysResponse);
     // 设置key的过期时间
-    rpc Expire(ExpireRequest) returns (Empty);
+    rpc AddExpire(AddExpireRequest) returns (Empty);
     // 移除 key的过期时间
-    rpc Persist(PersistRequest) returns (Empty);
+    rpc MoveExpire(MoveExpireRequest) returns (Empty);
     // 监听 key的变化
     rpc Watch(KeyRequest) returns (stream KeyChange);
     // 关闭监听

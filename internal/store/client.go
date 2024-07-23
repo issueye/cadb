@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -80,7 +79,6 @@ func (s *ClientStoreImpl) CheckClientIdExists(id string) (bool, error) {
 // ChekClientScecretKeyExists(secretKey string) (bool, error)
 func (s *ClientStoreImpl) ChekClientSecretKeyExists(secretKey string) (bool, error) {
 	data, err := s.GetClientBySecretKey(secretKey)
-	fmt.Println("data", data)
 	return data != nil, err
 }
 

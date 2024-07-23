@@ -39,13 +39,14 @@ func (db *DB[T]) UpdateFunc(key, bucket []byte, fn func(bkt *bbolt.Bucket, v *T)
 		if data == nil {
 			return nil
 		}
-		var value T
+
+		value := new(T)
 		err := utils.UnMarshal(data, value)
 		if err != nil {
 			return err
 		}
 
-		return fn(b, &value)
+		return fn(b, value)
 	})
 }
 

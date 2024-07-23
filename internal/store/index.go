@@ -93,7 +93,7 @@ func (s *KVStore) ParseKey(key string) (caKey *CaKey) {
 	}
 
 	// 如果key 不是 DefaultBucket 需要判断 Bucket 是否存在，如果不存在则创建
-	if bytes.Equal(DefaultBucket, caKey.Bucket) {
+	if !bytes.Equal(DefaultBucket, caKey.Bucket) {
 		s.db.CreateBucket(caKey.Bucket)
 	}
 
@@ -105,7 +105,7 @@ func (s *KVStore) CheckClientId(clientId string) bool {
 	return ok && err == nil
 }
 
-func (s *KVStore) ChekClientSecretKey(secretKey string) bool {
+func (s *KVStore) CheckClientSecretKey(secretKey string) bool {
 	ok, err := s.Client.ChekClientSecretKeyExists(secretKey)
 	return ok && err == nil
 }
@@ -142,7 +142,7 @@ func (s *KVStore) Set(key, value string, ttl int) error {
 
 	// 通知所有订阅了该 key 的订阅者
 	s.Notify(&Notify{
-		WT:    WT_Put,
+		WT:    WT_PUT,
 		Key:   key,
 		Entry: entry,
 	})
@@ -179,7 +179,7 @@ func (s *KVStore) Delete(key string) error {
 	// 如果数据被 Watch，则通知所有订阅者
 	if s.HaveWatch(key) {
 		s.Notify(&Notify{
-			WT:    WT_Del,
+			WT:    WT_DELETE,
 			Key:   key,
 			Entry: entry,
 		})
@@ -204,7 +204,7 @@ func (s *KVStore) RemoveTTL(key string) (err error) {
 		// 如果数据被 Watch，则通知所有订阅者
 		if s.HaveWatch(key) {
 			s.Notify(&Notify{
-				WT:    WT_ModifyExpire,
+				WT:    WT_MOVE_EXPIRE,
 				Key:   key,
 				Entry: v,
 			})
@@ -228,9 +228,19 @@ func (s *KVStore) SetTTL(key string, ttl int64) (entry *KVEntry, err error) {
 	caKey := s.ParseKey(key)
 
 	err = s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
+		entry = v
 		// 设置 TTL
-		entry.TTL = time.Now().Unix() + ttl
-		s.expireIndex.Add(key, entry.TTL)
+		v.TTL = time.Now().Unix() + ttl
+		s.expireIndex.Add(key, v.TTL)
+
+		// 如果数据被 Watch，则通知所有订阅者
+		if s.HaveWatch(key) {
+			s.Notify(&Notify{
+				WT:    WT_ADD_EXPIRE,
+				Key:   key,
+				Entry: v,
+			})
+		}
 
 		// 序列化
 		data := utils.MustMarshal(v)
