@@ -13,26 +13,26 @@ func TestGRPCClient(t *testing.T) {
 	}
 
 	key := "queue-sign-inc-num"
-	stream, err := client.Watch(key)
-	if err != nil {
-		t.Errorf("Error watching key: %v", err)
-		return
-	}
+	// stream, err := client.Watch(key)
+	// if err != nil {
+	// 	t.Errorf("Error watching key: %v", err)
+	// 	return
+	// }
 
-	go func() {
-		for {
-			msg, err := stream.Recv()
-			if err != nil {
-				if err.Error() == "EOF" {
-					return
-				}
-				t.Errorf("Error receiving message: %v", err)
-				return
-			} else {
-				t.Logf("Received message: %v", msg)
-			}
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		msg, err := stream.Recv()
+	// 		if err != nil {
+	// 			if err.Error() == "EOF" {
+	// 				return
+	// 			}
+	// 			t.Errorf("Error receiving message: %v", err)
+	// 			return
+	// 		} else {
+	// 			t.Logf("Received message: %v", msg)
+	// 		}
+	// 	}
+	// }()
 
 	err = client.Set(key, "testdata", 0)
 	if err != nil {
@@ -55,11 +55,11 @@ func TestGRPCClient(t *testing.T) {
 
 	// sleep
 	time.Sleep(7 * time.Second)
-	err = client.CloseWatch(key)
-	if err != nil {
-		t.Errorf("Error closing watch: %v", err)
-		return
-	}
+	// err = client.CloseWatch(key)
+	// if err != nil {
+	// 	t.Errorf("Error closing watch: %v", err)
+	// 	return
+	// }
 
 	client.Close()
 }

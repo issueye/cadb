@@ -2,7 +2,6 @@ package store
 
 import (
 	"log"
-	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -43,6 +42,11 @@ func (ei *ExpireIndex) getExpiredKeys(now int64) ([]*ExpireLoop, error) {
 
 	// 因为数据已经根据过期时间排序，所以只需要遍历过期时间小于等于当前时间的元素即可
 	keys := make([]*ExpireLoop, 0)
+
+	if len(ei.expireList) == 0 {
+		return keys, nil
+	}
+
 	for _, expire := range ei.expireList {
 		// 当前的元素未过期，后续的元素也不会过期，直接退出循环
 		if expire.ExpireAt > now {
@@ -64,6 +68,16 @@ func (ei *ExpireIndex) Add(key string, expireAt int64) {
 
 	func() {
 		defer ei.lock.Unlock()
+		// 防止重复添加
+		for _, expire := range ei.expireList {
+			if expire.Key == key {
+				// 如果过期时间更短，则更新过期时间
+				if expire.ExpireAt > expireAt {
+					expire.ExpireAt = expireAt
+				}
+				return
+			}
+		}
 		// 将键添加到过期索引中
 		ei.expireList = append(ei.expireList, Expire{ExpireAt: expireAt, Key: key})
 	}()
@@ -97,63 +111,86 @@ func (ei *ExpireIndex) Sort() {
 }
 
 func (s *KVStore) startExpireLoop() {
-	// 启动多个 goroutine 处理过期数据
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func() {
-			for {
-				// 从过期时间索引中获取即将过期的数据
-				keys, err := s.expireIndex.getExpiredKeys(time.Now().Unix())
-				if err != nil {
-					log.Printf("Error getting expired keys: %v", err)
-					continue
-				}
+	// 避免协程的数据竞争，每次只处理一个 goroutine 的数据
+	getKeys := func() []*ExpireLoop {
+		s.watchedKeysLock.Lock()
+		defer s.watchedKeysLock.Unlock()
+		// 从过期时间索引中获取即将过期的数据
+		keys, err := s.expireIndex.getExpiredKeys(time.Now().Unix())
+		if err != nil {
+			log.Printf("Error getting expired keys: %v", err)
+			return nil
+		}
 
-				// 检查 key 是否被 Watch，如果被 Watch，则通知
-				for _, key := range keys {
-
-					have := s.HaveWatch(key.Key)
-					if have {
-						// 获取数据
-						s.Notify(&Notify{
-							WT:  WT_EXPIRE,
-							Key: key.Key,
-							Entry: &KVEntry{
-								Key: key.Key,
-							},
-						})
-					}
-
-					s.expireIndex.Remove(key.Key)
-				}
-
-				// 批量删除过期数据
-				s.batchDelete(keys)
-
-				// 短暂休眠,减轻系统负载
-				time.Sleep(time.Second)
-			}
-		}()
+		return keys
 	}
+
+	// 启动多个 goroutine 处理过期数据
+	go func() {
+		for {
+			keys := getKeys()
+
+			// 检查 key 是否被 Watch，如果被 Watch，则通知
+			// 如果 key 的数量大于 100，则分成多个 goroutine 处理
+			for _, key := range keys {
+				have := HaveWatch(key.Key)
+				if have {
+					// 获取数据
+					msg := New()
+					msg.Key = key.Key
+
+					s.SendNotify(key.Key, key.IsLock)
+				}
+
+				s.expireIndex.Remove(key.Key)
+			}
+
+			// 短暂休眠,减轻系统负载
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
-func (s *KVStore) batchDelete(keys []*ExpireLoop) {
-	for _, key := range keys {
-		if key.IsLock {
-			CaKey := s.ParseKey(key.Key, true)
-			err := s.lockdb.Delete(CaKey.Bucket, CaKey.Key)
-			if err != nil {
-				log.Printf("Error deleting lock: %v", err)
-				continue
-			}
-		} else {
-			CaKey := s.ParseKey(key.Key, false)
-			// fmt.Printf("delete -> bucket: %s, key: %s", CaKey.Bucket, CaKey.Key)
-			err := s.db.Delete(CaKey.Bucket, CaKey.Key)
-			if err != nil {
-				log.Printf("Error deleting key: %v", err)
-				continue
-			}
-			s.db.Delete(keysBucket, CaKey.Key)
+func (s *KVStore) SendNotify(key string, isLock bool) {
+	var CaKey *CaKey
+	if isLock {
+		CaKey = s.ParseKey(key, true)
+		data, err := s.lockdb.Get(CaKey.Bucket, CaKey.Key)
+		if err != nil {
+			log.Printf("Error getting lock: %v", err)
+			return
+		}
+
+		Notify(WT_LOCK_EXPIRE, &Notification{
+			Key:    key,
+			IsLock: isLock,
+			Entry:  NewFromLock(data),
+		})
+
+		err = s.lockdb.Delete(CaKey.Bucket, CaKey.Key)
+		if err != nil {
+			log.Printf("Error deleting lock: %v", err)
+			return
+		}
+	} else {
+		CaKey = s.ParseKey(key, false)
+
+		data, err := s.db.Get(CaKey.Bucket, CaKey.Key)
+		if err != nil {
+			log.Printf("Error getting key: %v", err)
+			return
+		}
+
+		Notify(WT_EXPIRE, &Notification{
+			Key:    key,
+			IsLock: isLock,
+			Entry:  NewFromEntry(data),
+		})
+
+		err = s.db.Delete(CaKey.Bucket, CaKey.Key)
+		if err != nil {
+			log.Printf("Error deleting key: %v", err)
+			return
 		}
 	}
 }

@@ -100,15 +100,15 @@ func (c *CadbClient) MoveExpire(key string) error {
 	return err
 }
 
-func (c *CadbClient) Watch(key string) (proto.CadbStoreHelper_WatchClient, error) {
-	return c.storeHelper.Watch(context.Background(), &proto.KeyRequest{
-		Key: key,
-	})
-}
+// func (c *CadbClient) Watch(key string) (proto.CadbStoreHelper_WatchClient, error) {
+// 	return c.storeHelper.Watch(context.Background(), &proto.KeyRequest{
+// 		Key: key,
+// 	})
+// }
 
-func (c *CadbClient) CloseWatch(key string) error {
-	_, err := c.storeHelper.CloseWatch(context.Background(), &proto.KeyRequest{
-		Key: key,
-	})
-	return err
-}
+// func (c *CadbClient) CloseWatch(key string) error {
+// 	_, err := c.storeHelper.CloseWatch(context.Background(), &proto.KeyRequest{
+// 		Key: key,
+// 	})
+// 	return err
+// }

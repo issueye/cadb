@@ -54,6 +54,7 @@ func NewServer() {
 	proto.RegisterCadbStoreHelperServer(grpcSrv, &controller.Server{})
 	proto.RegisterCadbClientHelperServer(grpcSrv, &controller.Server{})
 	proto.RegisterCadbLockHelperServer(grpcSrv, &controller.CadbLock{})
+	proto.RegisterCadbWatchHelperServer(grpcSrv, &controller.Wathcer{})
 	reflection.Register(grpcSrv)
 
 	ShowBaner()
