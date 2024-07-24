@@ -10,11 +10,11 @@ import (
 	"golang.corp.yxkj.com/orange/cadb/internal/store"
 )
 
-type Wathcer struct{}
+type Watcher struct{}
 
 // WatchLock
 // 观察锁
-func (wathcer *Wathcer) WatchLock(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchLockServer) error {
+func (Watcher *Watcher) WatchLock(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchLockServer) error {
 	value := metadata.ExtractIncoming(stream.Context()).Get(middleware.AuthKey)
 	watcher := store.WatchLock(value, req.Key, func(WT store.WType, entry *store.Notification) {
 		t := proto.WatchType(WT)
@@ -46,7 +46,7 @@ func (wathcer *Wathcer) WatchLock(req *proto.KeyRequest, stream proto.CadbWatchH
 
 // CloseWatchLock
 // 关闭观察锁
-func (wathcer *Wathcer) CloseWatchLock(ctx context.Context, req *proto.KeyRequest) (*proto.Empty, error) {
+func (Watcher *Watcher) CloseWatchLock(ctx context.Context, req *proto.KeyRequest) (*proto.Empty, error) {
 	value := metadata.ExtractIncoming(ctx).Get(middleware.AuthKey)
 	store.RemoveWatchLock(req.Key, value)
 	return &proto.Empty{}, nil
@@ -54,7 +54,7 @@ func (wathcer *Wathcer) CloseWatchLock(ctx context.Context, req *proto.KeyReques
 
 // Watch
 // 观察
-func (wathcer *Wathcer) Watch(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchServer) error {
+func (Watcher *Watcher) Watch(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchServer) error {
 	value := metadata.ExtractIncoming(stream.Context()).Get(middleware.AuthKey)
 	watcher := store.Watch(value, req.Key, func(WT store.WType, entry *store.Notification) {
 		t := proto.WatchType(WT)
@@ -86,7 +86,7 @@ func (wathcer *Wathcer) Watch(req *proto.KeyRequest, stream proto.CadbWatchHelpe
 
 // CloseWatch
 // 关闭观察
-func (wathcer *Wathcer) CloseWatch(ctx context.Context, req *proto.KeyRequest) (*proto.Empty, error) {
+func (Watcher *Watcher) CloseWatch(ctx context.Context, req *proto.KeyRequest) (*proto.Empty, error) {
 	value := metadata.ExtractIncoming(ctx).Get(middleware.AuthKey)
 	store.RemoveWatch(req.Key, value)
 	return &proto.Empty{}, nil

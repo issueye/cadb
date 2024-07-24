@@ -1,0 +1,40 @@
+syntax = "proto3";
+package proto;
+option go_package = "./proto";
+
+
+// 空数据
+message Empty {}
+
+// 返回
+message PingResponse {
+    string message = 1;    // 返回消息  返回 pong
+    int64 timestamp = 2;   // 时间戳 返回当前服务的时间戳
+}
+
+// 返回
+message VersionResponse {
+    string version = 1;      // 版本号
+    string appName = 2;      // 程序名称
+    string gitHash = 3;      // git hash
+    string gitBranch = 4;    // git 分支
+    string buildTime = 5;    // 构建时间
+    string goos = 6;         // 操作系统
+    string goVersion = 7;    // go 版本
+}
+
+// 心跳
+message HeartbeatResponse {
+    string message = 1;         // 返回消息
+    int64 timestamp = 2;        // 时间戳
+    float memoryUsage = 3;      // 内存使用情况
+    float cpuUsage = 4;         // CPU使用情况
+}
+
+
+// 通用接口
+service CommonHelper {
+    rpc Ping(Empty) returns (PingResponse); // 测试网络
+    rpc Version(Empty) returns (VersionResponse); // 获取版本号
+    rpc Heartbeat(Empty) returns (HeartbeatResponse); // 心跳
+}

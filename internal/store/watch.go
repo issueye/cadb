@@ -2,7 +2,10 @@ package store
 
 import (
 	"encoding/json"
+	"slices"
 	"sync"
+
+	"github.com/samber/lo"
 )
 
 type WType int
@@ -152,46 +155,30 @@ func (o *Observer) AddWatch(key string, watcher *Watcher, isLock bool) *Watcher 
 	o.watchedKeysLock.Lock()
 	defer o.watchedKeysLock.Unlock()
 
-	var watchers []*Watcher
 	if isLock {
-		watchers = o.WatcherLocks[key]
+		o.WatcherLocks[key] = append(o.WatcherLocks[key], watcher)
 	} else {
-		watchers = o.Watchers[key]
+		o.Watchers[key] = append(o.Watchers[key], watcher)
 	}
 
-	// 检查 watchers 是否存在
-	if watchers == nil {
-		if isLock {
-			o.WatcherLocks[key] = make([]*Watcher, 0)
-		} else {
-			o.Watchers[key] = make([]*Watcher, 0)
-		}
-	}
-
-	// 添加 watcher
-	watchers = append(watchers, watcher)
 	return watcher
 }
 
 // RemoveWatch
 // 移除观察者
 func (o *Observer) RemoveWatch(key string, id string, isLock bool) {
-	// 检查Wacher 是否存在
-	if wacther := o.CheckWatch(key, id, isLock); wacther != nil {
+	// 检查Watcher 是否存在
+	if watcher := o.CheckWatch(key, id, isLock); watcher != nil {
 		o.watchedKeysLock.Lock()
 		defer o.watchedKeysLock.Unlock()
-		var watchers []*Watcher
 		if isLock {
-			watchers = o.WatcherLocks[key]
+			o.WatcherLocks[key] = slices.DeleteFunc(o.WatcherLocks[key], func(w *Watcher) bool {
+				return w.Id == id
+			})
 		} else {
-			watchers = o.Watchers[key]
-		}
-		for i, w := range watchers {
-			if w.Id == id {
-				watchers = append(watchers[:i], watchers[i+1:]...)
-				close(w.Close)
-				return
-			}
+			o.Watchers[key] = slices.DeleteFunc(o.Watchers[key], func(w *Watcher) bool {
+				return w.Id == id
+			})
 		}
 	}
 }
@@ -202,15 +189,14 @@ func (o *Observer) SendNotification(key string, wt WType, notify *Notification) 
 	o.watchedKeysLock.RLock()
 	defer o.watchedKeysLock.RUnlock()
 
-	var watchers []*Watcher
 	if notify.IsLock {
-		watchers = append(watchers, o.WatcherLocks[key]...)
+		lo.ForEach(o.WatcherLocks[key], func(w *Watcher, _ int) {
+			go w.CallBack(wt, notify)
+		})
 	} else {
-		watchers = append(watchers, o.Watchers[key]...)
-	}
-
-	for _, w := range watchers {
-		go w.CallBack(wt, notify)
+		lo.ForEach(o.Watchers[key], func(w *Watcher, _ int) {
+			go w.CallBack(wt, notify)
+		})
 	}
 }
 

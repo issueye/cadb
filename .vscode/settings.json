@@ -2,12 +2,16 @@
     "cSpell.words": [
         "bbolt",
         "Cadb",
+        "islock",
+        "leaseid",
         "lockdb",
         "protobuf",
         "protoc",
         "protoimpl",
         "protoreflect",
+        "RENEWLOCK",
         "resty",
+        "TRYLOCK",
         "yxkj"
     ]
 }
