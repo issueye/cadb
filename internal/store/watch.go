@@ -2,8 +2,10 @@ package store
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -24,12 +26,15 @@ const (
 )
 
 type Message struct {
-	Key     string `json:"key"`     // 键
-	Value   string `json:"value"`   // 值
-	Expire  int64  `json:"expire"`  // 过期时间
-	Op      WType  `json:"op"`      // 操作类型
-	IsLock  bool   `json:"islock"`  // 锁
-	LeaseID int64  `json:"leaseid"` // 租约ID
+	Key      string    `json:"key"`         // 键
+	Value    string    `json:"value"`       // 值
+	Expire   int64     `json:"expire"`      // 过期时间
+	Op       WType     `json:"op"`          // 操作类型
+	IsLock   bool      `json:"islock"`      // 锁
+	LeaseID  int64     `json:"leaseid"`     // 租约ID
+	ExpireAt time.Time `json:"expire_time"` // 过期时间
+	CreateAt time.Time `json:"create_at"`   // 创建时间
+	UpdateAt time.Time `json:"update_at"`   // 更新时间
 }
 
 func (msg *Message) CopyFromEntry(entry *KVEntry) {
@@ -38,6 +43,9 @@ func (msg *Message) CopyFromEntry(entry *KVEntry) {
 	msg.Expire = entry.TTL
 	msg.IsLock = false
 	msg.LeaseID = 0
+	msg.CreateAt = entry.CreatedAt
+	msg.UpdateAt = entry.UpdatedAt
+	msg.ExpireAt = entry.ExpireAt
 }
 
 func (msg *Message) CopyFromLock(entry *LockKVEntry) {
@@ -46,16 +54,22 @@ func (msg *Message) CopyFromLock(entry *LockKVEntry) {
 	msg.Expire = entry.TTL
 	msg.IsLock = entry.Lock
 	msg.LeaseID = entry.LeaseID
+	msg.CreateAt = entry.CreatedAt
+	msg.UpdateAt = entry.UpdatedAt
+	msg.ExpireAt = entry.ExpireAt
 }
 
 func NewFromEntry(entry *KVEntry) *Message {
 	return &Message{
-		Key:     entry.Key,
-		Value:   entry.Value,
-		Expire:  entry.TTL,
-		Op:      WT_PUT,
-		IsLock:  false,
-		LeaseID: -1,
+		Key:      entry.Key,
+		Value:    entry.Value,
+		Expire:   entry.TTL,
+		Op:       WT_PUT,
+		IsLock:   false,
+		LeaseID:  -1,
+		CreateAt: entry.CreatedAt,
+		UpdateAt: entry.UpdatedAt,
+		ExpireAt: entry.ExpireAt,
 	}
 }
 
@@ -65,12 +79,15 @@ func New() *Message {
 
 func NewFromLock(entry *LockKVEntry) *Message {
 	return &Message{
-		Key:     entry.Key,
-		Value:   "************", // 不显示客户端的ID
-		Expire:  entry.TTL,
-		Op:      WT_PUT,
-		IsLock:  entry.Lock,
-		LeaseID: entry.LeaseID,
+		Key:      entry.Key,
+		Value:    "************", // 不显示客户端的ID
+		Expire:   entry.TTL,
+		Op:       WT_PUT,
+		IsLock:   entry.Lock,
+		LeaseID:  entry.LeaseID,
+		CreateAt: entry.CreatedAt,
+		UpdateAt: entry.UpdatedAt,
+		ExpireAt: entry.ExpireAt,
 	}
 }
 
@@ -141,15 +158,10 @@ func (o *Observer) CheckWatch(key string, id string, isLock bool) *Watcher {
 
 // AddWatch
 // 添加观察者
-func (o *Observer) AddWatch(key string, watcher *Watcher, isLock bool) *Watcher {
+func (o *Observer) AddWatch(key string, watcher *Watcher, isLock bool) (*Watcher, error) {
+	// 检查Watcher 是否存在
 	if w := o.CheckWatch(key, watcher.Id, isLock); w != nil {
-		// 覆盖原有 watcher
-		w.Close <- struct{}{}
-		close(w.Close)
-		watcher.Close = make(chan struct{})
-
-		w = watcher
-		return w
+		return nil, fmt.Errorf("watcher %s already exists", watcher.Id)
 	}
 
 	o.watchedKeysLock.Lock()
@@ -161,7 +173,7 @@ func (o *Observer) AddWatch(key string, watcher *Watcher, isLock bool) *Watcher 
 		o.Watchers[key] = append(o.Watchers[key], watcher)
 	}
 
-	return watcher
+	return watcher, nil
 }
 
 // RemoveWatch
@@ -211,7 +223,7 @@ func HaveWatch(key string) bool {
 // Watch
 // 监听指定 key 的变化,并在有变化时通知订阅者
 
-func Watch(id string, key string, cb WatchCallback) *Watcher {
+func Watch(id string, key string, cb WatchCallback) (*Watcher, error) {
 	watcher := &Watcher{Id: id, CallBack: cb, Close: make(chan struct{})}
 	return ObserverInstance.AddWatch(key, watcher, false)
 }
@@ -235,7 +247,7 @@ func Notify(wt WType, data *Notification) {
 
 // WatchLock
 // 监听指定 key 的变化,并在有变化时通知订阅者
-func WatchLock(id string, key string, cb WatchCallback) *Watcher {
+func WatchLock(id string, key string, cb WatchCallback) (*Watcher, error) {
 	watcher := &Watcher{Id: id, CallBack: cb, Close: make(chan struct{})}
 	return ObserverInstance.AddWatch(key, watcher, true)
 }

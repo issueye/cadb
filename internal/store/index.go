@@ -9,22 +9,44 @@ import (
 
 	"go.etcd.io/bbolt"
 	"golang.corp.yxkj.com/orange/cadb/internal/utils"
+	pkgUtils "golang.corp.yxkj.com/orange/cadb/pkg/utils"
 )
 
 var DefaultBucket = []byte("kvstore")
 var keysBucket = []byte("keys")
 
 type KVEntry struct {
-	Value string `json:"value"` // key 的值
-	TTL   int64  `json:"ttl"`   // 过期时间
-	Key   string `json:"key"`   // key
+	Value     string    `json:"value"`      // key 的值
+	TTL       int64     `json:"ttl"`        // 过期时间
+	Key       string    `json:"key"`        // key
+	CreatedAt time.Time `json:"created_at"` // 创建时间
+	UpdatedAt time.Time `json:"updated_at"` // 更新时间
+	ExpireAt  time.Time `json:"expire_at"`  // 过期时间
+	Revision  int64     `json:"revision"`   // 版本号
 }
 
 // 用于锁定 key 的结构体
 type LockKVEntry struct {
-	KVEntry
+	*KVEntry
 	Lock    bool  `json:"lock"`     // 是否被锁定
 	LeaseID int64 `json:"lease_id"` // 租约ID
+}
+
+func NewLockKVEntry(key string, value string, ttl int64) *LockKVEntry {
+	now := time.Now()
+	return &LockKVEntry{
+		Lock:    true,
+		LeaseID: pkgUtils.GenID(),
+		KVEntry: &KVEntry{
+			Key:       key,
+			Value:     value,
+			TTL:       now.Add(time.Duration(ttl) * time.Second).Unix(),
+			CreatedAt: now,
+			UpdatedAt: now,
+			ExpireAt:  now.Add(time.Duration(ttl) * time.Second),
+			Revision:  0,
+		},
+	}
 }
 
 type KVStore struct {
@@ -60,10 +82,11 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 	kv := &KVStore{
 		db:              db,
 		lockdb:          lockdb,
-		expireIndex:     NewExpireIndex(),
 		watchedKeys:     make(map[string][]*Watcher),
 		watchedKeysLock: &sync.Mutex{},
 	}
+
+	kv.expireIndex = NewExpireIndex(kv)
 
 	// 可能会 panic
 	client, err := NewClientStoreImpl()
@@ -88,8 +111,6 @@ func NewKVStore(dbPath string) (*KVStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create bucket %s failed: %w", DefaultBucket, err)
 	}
-
-	kv.startExpireLoop()
 
 	return kv, nil
 }
@@ -145,7 +166,11 @@ func (s *KVStore) Set(key, value string, ttl int64) error {
 	// 设置过期时间
 	if ttl > 0 {
 		now := time.Now()
+
 		entry.TTL = now.Add(time.Duration(ttl) * time.Second).Unix()
+		entry.ExpireAt = now.Add(time.Duration(ttl) * time.Second)
+		entry.CreatedAt = now
+		entry.UpdatedAt = now
 		s.expireIndex.Add(key, entry.TTL)
 	}
 
@@ -196,6 +221,9 @@ func (s *KVStore) Delete(key string) error {
 		return err
 	}
 
+	// 从过期缓存中移除数据
+	s.expireIndex.Remove(key)
+
 	// 如果数据被 Watch，则通知所有订阅者
 	if HaveWatch(key) {
 		Notify(WT_DELETE, &Notification{
@@ -231,6 +259,9 @@ func (s *KVStore) RemoveTTL(key string) (err error) {
 		// 移除过期缓存中的数据
 		s.expireIndex.Remove(key)
 		v.TTL = 0
+		v.ExpireAt = time.Time{}
+		v.UpdatedAt = time.Now()
+		v.Revision += 1
 
 		// 序列化
 		data := utils.MustMarshal(v)
@@ -248,8 +279,12 @@ func (s *KVStore) SetTTL(key string, ttl int64) (entry *KVEntry, err error) {
 	err = s.db.UpdateFunc(caKey.Key, caKey.Bucket, func(bkt *bbolt.Bucket, v *KVEntry) error {
 		entry = v
 		// 设置 TTL
-		v.TTL = time.Now().Unix() + ttl
+		now := time.Now()
+		v.TTL = now.Add(time.Duration(ttl) * time.Second).Unix()
 		s.expireIndex.Add(key, v.TTL)
+		v.ExpireAt = now.Add(time.Duration(ttl) * time.Second)
+		v.UpdatedAt = time.Now()
+		v.Revision += 1
 
 		// 如果数据被 Watch，则通知所有订阅者
 		if HaveWatch(key) {

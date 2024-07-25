@@ -7,6 +7,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
+	github.com/samber/lo v1.46.0
 	github.com/syndtr/goleveldb v1.0.0
 	go.etcd.io/bbolt v1.3.10
 	go.uber.org/zap v1.27.0
@@ -19,7 +20,6 @@ require (
 require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/samber/lo v1.46.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 )
 

@@ -60,6 +60,9 @@ message Notification {
     int64 Expire = 3;
     bool IsLock = 5;
     int64 LeaseID = 6;
+    string ExpireAt = 7;
+    string CreateAt = 8;
+    string UpdateAt = 9;
 }
 
 // Key 的变化返回结构体

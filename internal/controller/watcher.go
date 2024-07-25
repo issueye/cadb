@@ -12,34 +12,49 @@ import (
 
 type Watcher struct{}
 
+func (Watcher *Watcher) convert(entry *store.Notification) *proto.Notification {
+	return &proto.Notification{
+		Key:      entry.Key,
+		Expire:   entry.Entry.Expire,
+		Value:    entry.Entry.Value,
+		IsLock:   entry.Entry.IsLock,
+		LeaseID:  entry.Entry.LeaseID,
+		ExpireAt: entry.Entry.ExpireAt.Format("2006-01-02 15:04:05"),
+		CreateAt: entry.Entry.CreateAt.Format("2006-01-02 15:04:05"),
+		UpdateAt: entry.Entry.UpdateAt.Format("2006-01-02 15:04:05"),
+	}
+}
+
 // WatchLock
 // 观察锁
 func (Watcher *Watcher) WatchLock(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchLockServer) error {
 	value := metadata.ExtractIncoming(stream.Context()).Get(middleware.AuthKey)
-	watcher := store.WatchLock(value, req.Key, func(WT store.WType, entry *store.Notification) {
+	watcher, err := store.WatchLock(value, req.Key, func(WT store.WType, entry *store.Notification) {
 		t := proto.WatchType(WT)
 
 		stream.Send(&proto.KeyChange{
 			Type: t,
 			Key:  entry.Key,
-			Data: &proto.Notification{
-				Key:     entry.Key,
-				Value:   entry.Entry.Value,
-				IsLock:  entry.Entry.IsLock,
-				LeaseID: entry.Entry.LeaseID,
-			},
+			Data: Watcher.convert(entry),
 		})
 	})
+
+	if err != nil {
+		return err
+	}
 
 	// 阻塞
 	select {
 	case <-stream.Context().Done():
 		{
 			global.Log.Infof("通过终止会话[%s]结束会话 key: %s", value, req.Key)
-			store.RemoveWatch(req.Key, value)
+			store.RemoveWatchLock(req.Key, value)
 		}
 	case <-watcher.Close:
-		global.Log.Infof("通过CloseWatch[%s]结束会话 key: %s", value, req.Key)
+		{
+			global.Log.Infof("通过CloseWatch[%s]结束会话 key: %s", value, req.Key)
+			store.RemoveWatchLock(req.Key, value)
+		}
 	}
 	return nil
 }
@@ -56,20 +71,19 @@ func (Watcher *Watcher) CloseWatchLock(ctx context.Context, req *proto.KeyReques
 // 观察
 func (Watcher *Watcher) Watch(req *proto.KeyRequest, stream proto.CadbWatchHelper_WatchServer) error {
 	value := metadata.ExtractIncoming(stream.Context()).Get(middleware.AuthKey)
-	watcher := store.Watch(value, req.Key, func(WT store.WType, entry *store.Notification) {
+	watcher, err := store.Watch(value, req.Key, func(WT store.WType, entry *store.Notification) {
 		t := proto.WatchType(WT)
 
 		stream.Send(&proto.KeyChange{
 			Type: t,
 			Key:  entry.Key,
-			Data: &proto.Notification{
-				Key:     entry.Key,
-				Value:   entry.Entry.Value,
-				IsLock:  entry.Entry.IsLock,
-				LeaseID: entry.Entry.LeaseID,
-			},
+			Data: Watcher.convert(entry),
 		})
 	})
+
+	if err != nil {
+		return err
+	}
 
 	// 阻塞
 	select {
@@ -79,7 +93,10 @@ func (Watcher *Watcher) Watch(req *proto.KeyRequest, stream proto.CadbWatchHelpe
 			store.RemoveWatch(req.Key, value)
 		}
 	case <-watcher.Close:
-		global.Log.Infof("通过CloseWatch[%s]结束会话 key: %s", value, req.Key)
+		{
+			global.Log.Infof("通过CloseWatch[%s]结束会话 key: %s", value, req.Key)
+			store.RemoveWatch(req.Key, value)
+		}
 	}
 	return nil
 }
